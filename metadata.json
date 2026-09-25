@@ -1,0 +1,8 @@
+{
+  "name": "Remix Anos x7",
+  "description": "Game Booster complet pour optimiser les performances système et libérer la mémoire vive.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
