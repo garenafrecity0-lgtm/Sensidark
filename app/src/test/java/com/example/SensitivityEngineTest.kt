@@ -162,7 +162,50 @@ class SensitivityEngineTest {
 
         // The 60Hz/120Hz touch device gets compensated with higher sensitivity values compared to iOS ultra-low latency
         assertTrue("Sensitivities should adapt to phone hardware differences", budgetConfig.general != iphoneConfig.general)
-        assertTrue(iphoneConfig.general in 170..195)
-        assertTrue(budgetConfig.general in 170..200)
+        assertTrue(iphoneConfig.general in 150..185)
+        assertTrue(budgetConfig.general in 160..198)
+    }
+
+    @Test
+    fun testIPhoneDoesNotUseDpiAndUsesAppleGlidingSpeed() {
+        val iphone = DeviceSpec(
+            brand = "Apple (iPhone)",
+            model = "iPhone 16 Pro Max",
+            refreshRateHz = 120,
+            screenInch = 6.9f,
+            stockDpi = 460,
+            recommendedSafeMaxDpi = 800,
+            touchSamplingHz = 240,
+            ramGb = 8
+        )
+
+        val config = SensitivityEngine.calculate(iphone, Playstyle.PRECISION_HEADSHOT, useDpi = true)
+        assertTrue("iPhone must have isAppleDevice true", config.isAppleDevice)
+        assertFalse("iPhone must have useDpi false (no DPI on iOS)", config.useDpi)
+        assertEquals(120, config.iosGlidingSpeed)
+        assertTrue(config.tips.any { it.contains("iOS") || it.contains("iPhone") })
+    }
+
+    @Test
+    fun testSensitivityCalculationWithAndWithoutDpi() {
+        val samsung = DeviceSpec(
+            brand = "Samsung",
+            model = "Galaxy A55 5G",
+            refreshRateHz = 120,
+            screenInch = 6.6f,
+            stockDpi = 390,
+            recommendedSafeMaxDpi = 660,
+            touchSamplingHz = 240,
+            ramGb = 8
+        )
+
+        val withDpiConfig = SensitivityEngine.calculate(samsung, Playstyle.PRECISION_HEADSHOT, useDpi = true)
+        val withoutDpiConfig = SensitivityEngine.calculate(samsung, Playstyle.PRECISION_HEADSHOT, useDpi = false)
+
+        assertTrue("withDpi should use custom calculated DPI", withDpiConfig.useDpi)
+        assertFalse("withoutDpi should have useDpi false", withoutDpiConfig.useDpi)
+        assertEquals(samsung.stockDpi, withoutDpiConfig.dpi)
+        assertTrue(withDpiConfig.dpi > samsung.stockDpi)
+        assertTrue("Without DPI general sensitivity is compensated", withoutDpiConfig.general >= withDpiConfig.general)
     }
 }

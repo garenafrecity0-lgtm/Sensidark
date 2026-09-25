@@ -13,7 +13,7 @@ enum class UserRole(
     VIP(
         title = "Mode VIP Permanent",
         badge = "VIP ⭐",
-        description = "Tous modèles mondiaux débloqués + IA Anos Bot (Café Noir) illimitée."
+        description = "Tous modèles mondiaux débloqués + IA Anos Bot illimitée."
     ),
     ADMIN(
         title = "Mode Administrateur",
@@ -26,8 +26,8 @@ enum class UserRole(
 }
 
 object AuthConstants {
-    const val ADMIN_SECRET_KEY = "com.dts"
+    const val ADMIN_SECRET_KEY = "Zax11"
     const val CLIENT_DEFAULT_KEY = "CLIENT-FREE-2025"
     const val WHATSAPP_NUMBER = "+23407071776576"
-    const val WHATSAPP_URL = "https://wa.me/23407071776576?text=Bonjour,%20je%20souhaite%20acheter%20une%20cl%C3%A9%20d'acc%C3%A8s%20VIP%20permanent%20pour%20SensiFire%20Pro"
+    const val WHATSAPP_URL = "https://wa.me/23407071776576?text=Bonjour,%20je%20souhaite%20acheter%20une%20cl%C3%A9%20d'acc%C3%A8s%20VIP%20permanent%20pour%20Anos%20Aura%20VIP%20V2"
 }

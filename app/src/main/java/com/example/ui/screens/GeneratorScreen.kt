@@ -4,6 +4,13 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -16,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -108,6 +116,7 @@ fun GeneratorScreen(
     val selectedBrand by viewModel.selectedBrand.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState()
     val selectedPlaystyle by viewModel.selectedPlaystyle.collectAsState()
+    val useDpi by viewModel.useDpi.collectAsState()
     val currentConfig by viewModel.currentConfig.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
@@ -201,7 +210,7 @@ fun GeneratorScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Générateur Universel de Sensi",
+                    text = "Anos Aura VIP V2",
                     color = TextPrimary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,
@@ -327,46 +336,126 @@ fun GeneratorScreen(
                 }
             }
 
-            // Section Admin Spécifique
+            // Section Admin Spécifique avec Barres d'Animation Haute Performance
             if (userRole == UserRole.ADMIN) {
                 Card(
                     colors = CardDefaults.cardColors(containerColor = DarkSurfaceElevated),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, FireCrimson.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                        .border(1.dp, FireCrimson.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
+                        .testTag("card_admin_animated_panel")
                 ) {
                     Column(
                         modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Header Admin avec indicateur clignotant
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                AdminPulsingDot()
+                                Text(
+                                    text = "👑 CONSOLE ADMIN : SYSTÈME ACTIF",
+                                    color = FireCrimson,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
                             Text(
-                                text = "👑 SECTION ADMIN : 68 MARQUES & MODÈLES",
-                                color = FireCrimson,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Black
-                            )
-                            Text(
-                                text = "${DeviceCatalog.BRANDS.size} marques au monde",
+                                text = "${DeviceCatalog.BRANDS.size} marques débloquées",
                                 color = TextMuted,
                                 fontSize = 10.sp
                             )
                         }
 
-                        Text(
-                            text = "Accès maître total : vous pouvez explorer et calibrer plus de 68 marques de smartphones et des centaines de modèles dans le monde.",
-                            color = TextSecondary,
-                            fontSize = 11.sp
-                        )
+                        // Barres d'Animation Equalizer Audio/Tactile en temps réel
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(DarkSurfaceVariant)
+                                .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+                                .padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "📊 ANALYSEUR DE FLUX TACTILE & MOTEUR GRAPHIQUE",
+                                    color = FireGold,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "LIVE OVERCLOCK",
+                                    color = CyberGreen,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Black
+                                )
+                            }
+
+                            // Les 18 barres d'égaliseur animées
+                            AdminEqualizerAnimationBars()
+                        }
+
+                        // Barres d'Animation Télémétrie et Puissance Admin
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                text = "TÉLÉMÉTRIE & PERFORMANCES MATÉRIELLES",
+                                color = TextSecondary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            AdminTelemetryAnimatedBar(
+                                title = "⚡ Overclock Échantillonnage Tactile",
+                                subtext = "480Hz Turbo Response • Latence 1.2ms",
+                                baseProgress = 0.98f,
+                                accentColor = FireOrange,
+                                durationMs = 1200
+                            )
+
+                            AdminTelemetryAnimatedBar(
+                                title = "🎯 Calibrage Vectoriel Aim-Lock & One-Tap",
+                                subtext = "Compensation Micro-Drag • Anti-Décrochage",
+                                baseProgress = 0.96f,
+                                accentColor = HeadshotRed,
+                                durationMs = 1400
+                            )
+
+                            AdminTelemetryAnimatedBar(
+                                title = "🔥 Débit GPU & Rendu Trame (Bypass V-Sync)",
+                                subtext = "120 FPS Verrouillé • Buffer Optimisé",
+                                baseProgress = 0.94f,
+                                accentColor = FireCrimson,
+                                durationMs = 1600
+                            )
+
+                            AdminTelemetryAnimatedBar(
+                                title = "🛡️ Stabilité Kernel & Réduction Input-Lag",
+                                subtext = "Priorité Haute Thread Tactile OS",
+                                baseProgress = 0.99f,
+                                accentColor = CyberCyan,
+                                durationMs = 1000
+                            )
+                        }
 
                         Button(
                             onClick = { showAdminCatalogDialog = true },
-                            modifier = Modifier.fillMaxWidth().testTag("btn_open_admin_60_brands"),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("btn_open_admin_60_brands"),
                             colors = ButtonDefaults.buttonColors(containerColor = FireCrimson),
                             shape = RoundedCornerShape(10.dp)
                         ) {
@@ -375,7 +464,7 @@ fun GeneratorScreen(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                                Text("Ouvrir le Catalogue des 68 Marques et Modèles", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text("Explorer les 68 Marques et Modèles", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                             }
                         }
                     }
@@ -748,6 +837,108 @@ fun GeneratorScreen(
                 }
             }
 
+            // OPTION DPI & CONFIGURATION SYSTÈME (AVEC OU SANS DPI / APPLE iOS)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "4. Option DPI & Optimisation Système",
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (selectedModel.isApple) {
+                    // Apple iOS Info Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = DarkSurfaceElevated),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, CyberCyan.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Text("🍎", fontSize = 24.sp)
+                            Column {
+                                Text(
+                                    text = "iPhone / iOS : Pas d'option DPI (Spécifique à Android)",
+                                    color = CyberCyan,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "Apple utilise le Contrôle du sélectionneur (Glisse: 120, Mode Précis) et AssistiveTouch (100%). Sensi optimisée sans DPI !",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Android Toggle: Avec DPI vs Sans DPI
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Avec DPI Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (useDpi) CyberCyan.copy(alpha = 0.2f) else DarkSurfaceVariant)
+                                .border(1.dp, if (useDpi) CyberCyan else DarkBorder, RoundedCornerShape(12.dp))
+                                .clickable { viewModel.setUseDpi(true) }
+                                .padding(vertical = 10.dp, horizontal = 12.dp)
+                                .testTag("btn_toggle_avec_dpi"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "⚡ AVEC DPI",
+                                    color = if (useDpi) CyberCyan else TextSecondary,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "DPI Optimisé & Glisse Max",
+                                    color = if (useDpi) TextPrimary else TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+
+                        // Sans DPI Button
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (!useDpi) SafeGreen.copy(alpha = 0.2f) else DarkSurfaceVariant)
+                                .border(1.dp, if (!useDpi) SafeGreen else DarkBorder, RoundedCornerShape(12.dp))
+                                .clickable { viewModel.setUseDpi(false) }
+                                .padding(vertical = 10.dp, horizontal = 12.dp)
+                                .testTag("btn_toggle_sans_dpi"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "🛡️ SANS DPI",
+                                    color = if (!useDpi) SafeGreen else TextSecondary,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 12.sp
+                                )
+                                Text(
+                                    text = "DPI d'origine (${selectedModel.stockDpi})",
+                                    color = if (!useDpi) TextPrimary else TextMuted,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // Headshot Estimation & Drag Technique Banner
             Card(
                 colors = CardDefaults.cardColors(containerColor = DarkSurface),
@@ -899,8 +1090,14 @@ fun GeneratorScreen(
                             )
                         }
                         Text(
-                            text = "DPI : ${currentConfig.dpi} • Bouton: ${currentConfig.fireButtonSize}%",
-                            color = CyberCyan,
+                            text = if (currentConfig.isAppleDevice) {
+                                "🍎 iOS Glisse: 120 • Bouton: ${currentConfig.fireButtonSize}%"
+                            } else if (!currentConfig.useDpi) {
+                                "🛡️ SANS DPI (Stock: ${currentConfig.stockDpi}) • Bouton: ${currentConfig.fireButtonSize}%"
+                            } else {
+                                "DPI : ${currentConfig.dpi} • Bouton: ${currentConfig.fireButtonSize}%"
+                            },
+                            color = if (currentConfig.isAppleDevice || currentConfig.useDpi) CyberCyan else SafeGreen,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -1108,21 +1305,25 @@ fun GeneratorScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // DPI Card
+                // DPI Card (Adaptive for iOS / Android Sans DPI / Android Avec DPI)
                 Card(
                     colors = CardDefaults.cardColors(containerColor = DarkSurface),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .weight(1f)
-                        .border(1.dp, DarkBorder, RoundedCornerShape(14.dp))
+                        .border(
+                            1.dp,
+                            if (currentConfig.isAppleDevice) CyberCyan.copy(alpha = 0.5f) else if (!currentConfig.useDpi) SafeGreen.copy(alpha = 0.5f) else DarkBorder,
+                            RoundedCornerShape(14.dp)
+                        )
                 ) {
                     Column(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "⚙️ DPI CONSEILLÉ",
-                            color = CyberCyan,
+                            text = if (currentConfig.isAppleDevice) "🍎 RÉGLAGE iOS" else if (!currentConfig.useDpi) "🛡️ SANS MODIF DPI" else "⚙️ DPI CONSEILLÉ",
+                            color = if (currentConfig.isAppleDevice) CyberCyan else if (!currentConfig.useDpi) SafeGreen else CyberCyan,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -1131,25 +1332,25 @@ fun GeneratorScreen(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "${currentConfig.dpi}",
+                                text = if (currentConfig.isAppleDevice) "120" else "${currentConfig.dpi}",
                                 color = TextPrimary,
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
-                                text = "DPI",
+                                text = if (currentConfig.isAppleDevice) "Glisse" else "DPI",
                                 color = TextSecondary,
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(bottom = 3.dp)
                             )
                         }
                         Text(
-                            text = "Stock : ${currentConfig.stockDpi} DPI",
+                            text = if (currentConfig.isAppleDevice) "Contrôle Sélectionneur" else if (!currentConfig.useDpi) "DPI Stock : ${currentConfig.stockDpi}" else "Stock : ${currentConfig.stockDpi} DPI",
                             color = TextMuted,
                             fontSize = 10.sp
                         )
                         Text(
-                            text = "Limite max sûre : ${selectedModel.recommendedSafeMaxDpi}",
+                            text = if (currentConfig.isAppleDevice) "Suivi AssistiveTouch: 100%" else if (!currentConfig.useDpi) "Sensi One-Tap compensée" else "Limite sûre : ${selectedModel.recommendedSafeMaxDpi}",
                             color = SafeGreen,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium
@@ -1653,5 +1854,180 @@ fun GeneratorScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun AdminPulsingDot(modifier: Modifier = Modifier) {
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse_dot")
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_dot_alpha"
+    )
+
+    Box(
+        modifier = modifier
+            .size(10.dp)
+            .clip(CircleShape)
+            .background(FireCrimson.copy(alpha = alpha)),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(CircleShape)
+                .background(Color.White)
+        )
+    }
+}
+
+@Composable
+fun AdminEqualizerAnimationBars(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "equalizer_bars")
+    val barDurations = listOf(350, 500, 280, 420, 600, 310, 480, 260, 520, 380, 440, 290, 560, 340, 460, 320, 510, 390)
+    val animatedFractions = barDurations.mapIndexed { index, duration ->
+        transition.animateFloat(
+            initialValue = 0.15f + ((index % 4) * 0.05f),
+            targetValue = 0.85f + ((index % 3) * 0.07f),
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = duration, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "bar_height_$index"
+        )
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(38.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        animatedFractions.forEachIndexed { index, fractionState ->
+            val heightFraction = fractionState.value.coerceIn(0.1f, 1f)
+            val barColor = when (index % 4) {
+                0 -> FireCrimson
+                1 -> FireOrange
+                2 -> FireGold
+                else -> CyberCyan
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 1.5.dp)
+                    .fillMaxHeight(heightFraction)
+                    .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                barColor,
+                                barColor.copy(alpha = 0.35f)
+                            )
+                        )
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+fun AdminTelemetryAnimatedBar(
+    title: String,
+    subtext: String,
+    baseProgress: Float,
+    accentColor: Color,
+    durationMs: Int,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "telemetry_progress_$title")
+    val animatedProgressOffset by infiniteTransition.animateFloat(
+        initialValue = -0.03f,
+        targetValue = 0.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMs, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "telemetry_fluctuation"
+    )
+
+    val currentProgress = (baseProgress + animatedProgressOffset).coerceIn(0.85f, 1.0f)
+    val percentageInt = (currentProgress * 100).toInt()
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DarkSurface)
+            .border(1.dp, DarkBorder, RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = subtext,
+                    color = TextMuted,
+                    fontSize = 9.sp
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(accentColor.copy(alpha = 0.2f))
+                    .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "$percentageInt%",
+                    color = accentColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black
+                )
+            }
+        }
+
+        // Animated Bar track
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.Black.copy(alpha = 0.5f))
+        ) {
+            // Fill
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(currentProgress)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                accentColor.copy(alpha = 0.6f),
+                                accentColor,
+                                Color.White.copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+            )
+        }
     }
 }

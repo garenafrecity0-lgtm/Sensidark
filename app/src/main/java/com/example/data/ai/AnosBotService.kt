@@ -48,16 +48,16 @@ object AnosBotService {
     }
 
     private const val SYSTEM_PROMPT = """
-Tu es Anos Bot, une intelligence artificielle d'élite pour Free Fire.
-Tu t'exprimes avec la précision, le naturel, l'intelligence et la fluidité de ChatGPT et Google Gemini.
-Ne fais JAMAIS aucune mention de café, thé ou boissons. Parle comme un véritable coach et stratège esports professionnel.
-Tu maîtrises parfaitement :
-1. La calibration des sensibilités Free Fire (Général modéré pour la précision, Point Rouge vif pour le One-Tap, Mire 2X, Mire 4X, Sniper, Regard Libre de 0 à 200).
-2. Le DPI Android (Largeur minimale dans les options pour développeurs) selon l'écran (60Hz, 90Hz, 120Hz, 144Hz) et la sécurité du smartphone.
-3. La taille et le placement du bouton de tir sur le HUD personnalisé.
-4. Les techniques de Drag (Drag en J inversé, Drag vertical, Drag de rotation) et le contrôle du recul.
-5. Les armes clés (M1887, Desert Eagle, Woodpecker, AC80, MP40, UMP, SCAR, AWM).
-Réponds avec clarté, rigueur, des listes à puces et des valeurs chiffrées concrètes.
+Tu es Anos Bot, l'intelligence artificielle et coach esports d'élite pour Free Fire, doté de la fluidité, du naturel, de la curiosité et de l'empathie conversationnelle de Google Gemini et ChatGPT.
+
+Directives conversationnelles impératives :
+1. Engage une VRAIE conversation vivante : ne te contente pas de balancer un tableau sec. Salue chaleureusement le joueur, analyse sa situation avec pédagogie, et pose-lui des questions de relance ciblées (ex: ses armes favorites, son ressenti tactile, la fluidité de son écran, son mode de jeu principal BR ou Clash Squad).
+2. Explique la physique et les mécaniques réelles de Free Fire :
+   - Loi de proportionnalité inverse : quand la sensibilité générale est basse, le DPI doit être plus élevé pour conserver la vitesse de rotation 360°.
+   - Influence du Bouton de Tir : un gros bouton (52%-58%) réduit l'espace de swipe restant vers le haut, nécessitant une sensibilité plus élevée (165-190) pour atteindre la tête avant le bord de l'écran.
+   - Mode Sans DPI : compensation automatique pour réussir les One-Taps sur le DPI d'origine.
+3. Donne des conseils précis sur les armes (M1887, Desert Eagle, Woodpecker, MP40, UMP, AWM) et la trajectoire du pouce (Drag en J inversé, Drag vertical sec).
+4. Ne fais jamais mention de nourriture, café ou boissons. Parle comme un véritable champion et analyste Free Fire passionné.
 """
 
     suspend fun sendMessage(
@@ -159,23 +159,125 @@ Réponds avec clarté, rigueur, des listes à puces et des valeurs chiffrées co
         val q = prompt.lowercase().trim()
 
         return when {
+            // Greetings and introductions
+            q == "salut" || q == "bonjour" || q == "coucou" || q == "hello" || q == "yo" || q == "hey" || q.startsWith("salut") || q.startsWith("bonjour") -> {
+                buildString {
+                    appendLine("Salut champion ! 🔥 C'est **Anos Bot**, ton coach IA Free Fire.")
+                    appendLine()
+                    appendLine("Je suis là pour t'accompagner dans la calibration parfaite de ton gameplay : **sensibilités dynamiques**, **DPI adapté**, **taille du bouton de tir** et **techniques de drag**.")
+                    if (deviceContext.isNotBlank()) {
+                        appendLine("\n📱 J'ai détecté ta configuration actuelle : **$deviceContext**.")
+                    }
+                    appendLine()
+                    appendLine("Dis-moi, sur quel aspect veux-tu qu'on travaille ensemble aujourd'hui ?")
+                    appendLine("• Le One-Tap au M1887 / Desert Eagle ?")
+                    appendLine("• L'ajustement du DPI selon ta sensibilité ?")
+                    appendLine("• La taille et position idéale de ton bouton de tir ?")
+                }
+            }
+
+            // DPI vs Sensitivity inverse proportionality & Button size question
+            (q.contains("dpi") && (q.contains("sensi") || q.contains("bas") || q.contains("faible") || q.contains("augmenter") || q.contains("bouton") || q.contains("130") || q.contains("140") || q.contains("supérieur") || q.contains("superieur"))) ||
+            (q.contains("taille") && q.contains("bouton") && q.contains("sensi")) -> {
+                buildString {
+                    appendLine("Excellente remarque ! C'est exactement la **loi physique fondamentale de Free Fire** que nous appliquons dans le nouveau moteur de calcul :")
+                    appendLine()
+                    appendLine("📐 **1. La loi de proportionnalité inverse : DPI vs Sensibilité**")
+                    appendLine("• **Si ta sensibilité Générale est basse** (ex: 120-145) : Ton balayage sur l'écran a moins d'amplitude. Pour compenser et garder des rotations 360° ultra-rapides, le **DPI doit être plus ÉLEVÉ** (+120 à +180 DPI au-dessus du stock, soit ~520 à 580 DPI).")
+                    appendLine("• **Si ta sensibilité est haute** (ex: 170-195) : Le DPI doit rester **modéré** (+40 à +70 DPI) pour éviter le double effet d'accélération qui ferait voler le viseur au-dessus de la tête.")
+                    appendLine()
+                    appendLine("🔘 **2. Pourquoi la sensibilité DOIT être supérieure avec un gros bouton de tir ?**")
+                    appendLine("• **Espace de drag réduit :** Plus le bouton de tir est grand (**52% à 58%**), plus il occupe de place verticale vers le bas de l'écran. La distance restante pour que ton pouce glisse vers le haut avant d'atteindre le haut de l'écran est donc plus courte !")
+                    appendLine("• **Compensation dynamique :** Pour que la balle atteigne la tête avant que ton pouce ne sorte de l'écran, la sensibilité Générale et le Point Rouge **doivent être supérieures (165 à 192 / 200)**.")
+                    appendLine("• À l'inverse, avec un petit bouton (44%-48%), la course de swipe est longue et autorise une sensibilité plus douce.")
+                    appendLine()
+                    appendLine("🛡️ **3. En mode Sans DPI (DPI d'origine) :**")
+                    appendLine("• L'application injecte un bonus de compensation direct (**+18 à +28 pts de sensi**) pour réussir des One-Taps parfaits sans toucher aux options développeurs.")
+                    appendLine()
+                    appendLine("💬 **Question pour toi :** Quelle taille de bouton de tir utilises-tu actuellement sur ton HUD (45%, 50%, 55%) ? Et ressens-tu une résistance lors du flick vertical ?")
+                }
+            }
+
+            // Recalibration question / Sensi too high / DPI too high / Button too small
+            (q.contains("trop élevé") || q.contains("trop eleve") || q.contains("trop haut") || q.contains("revoir") || q.contains("maniere de calculer") || q.contains("manière de calculer")) && (q.contains("sensi") || q.contains("dpi") || q.contains("btn") || q.contains("bouton") || q.contains("tir")) -> {
+                buildString {
+                    appendLine("🎯 **Le moteur de calcul a été entièrement synchronisé avec les lois physiques du jeu !**")
+                    appendLine()
+                    appendLine("Voici comment le système ajuste désormais chaque valeur en temps réel :")
+                    appendLine()
+                    appendLine("✅ **1. Sensibilités Dynamiques et Supérieures (150 à 195+) :**")
+                    appendLine("• La sensibilité ne reste pas bloquée à 130-140 : elle monte intelligemment jusqu'à **168 - 192 / 200** si ton bouton de tir est plus grand ou si ton DPI est proche du stock.")
+                    appendLine("• **Point Rouge :** Calibré à **176 - 194 / 200** pour un déclenchement One-Tap instantané sans temps mort.")
+                    appendLine()
+                    appendLine("⚙️ **2. DPI Inversement Proportionnel :**")
+                    appendLine("• Sensi modérée ➔ **DPI augmenté (+100 à +160)** pour accélérer la glisse.")
+                    appendLine("• Sensi explosive ➔ **DPI doux (+45 à +75)** pour une stabilité chirurgicale.")
+                    appendLine("• Mode **[🛡️ SANS DPI]** : Sensi surboostée pour One-Tap sur le DPI d'origine.")
+                    appendLine()
+                    appendLine("🔘 **3. Bouton de Tir Équilibré (46% à 56%) :**")
+                    appendLine("• Zone de contact tactile élargie pour garantir zéro miss-click en plein duel.")
+                    appendLine()
+                    appendLine("Dis-moi, quelle arme préfères-tu jouer en ce moment (M1887, Desert Eagle, Woodpecker ou MP40) ?")
+                }
+            }
+
+            // iPhone / Apple DPI question
+            (q.contains("iphone") || q.contains("apple") || q.contains("ios")) && (q.contains("dpi") || q.contains("largeur") || q.contains("pourquoi") || q.contains("penses pas") || q.contains("pas de dpi")) -> {
+                buildString {
+                    appendLine("🍎 **Excellente observation technique : les iPhones n'ont effectivement pas d'option DPI !**")
+                    appendLine()
+                    appendLine("Sur Android, le DPI modifie la 'Largeur minimale' dans les options développeurs. Sur iOS (Apple), ce paramètre n'existe pas, mais Apple offre des réglages d'accessibilité encore plus puissants :")
+                    appendLine()
+                    appendLine("⚙️ **La méthode pro pour booster la glisse sur iPhone :**")
+                    appendLine("1. **Contrôle du Sélectionneur (Switch Control) :**")
+                    appendLine("   • Va dans *Réglages > Accessibilité > Contrôle du sélectionneur*.")
+                    appendLine("   • Active le mode de défilement sur **'Précis' (ou Individuel)**.")
+                    appendLine("   • Règle la **Vitesse de glisse (Curseur) à 120 (Max)**.")
+                    appendLine("2. **Sensibilité du Suivi (AssistiveTouch) :**")
+                    appendLine("   • Va dans *Réglages > Accessibilité > Toucher > AssistiveTouch*.")
+                    appendLine("   • Pousse la sensibilité du suivi à **100% (vers le lièvre)**.")
+                    appendLine()
+                    appendLine("Dans SensiFire Pro, dès que tu choisis un iPhone, le DPI se désactive automatiquement et la sensibilité générale est rehaussée (170-190) pour compenser !")
+                    appendLine()
+                    appendLine("Quel modèle d'iPhone possèdes-tu précisément (ex: 13, 14 Pro, 15 Pro Max) ?")
+                }
+            }
+
+            // Avec ou Sans DPI question
+            (q.contains("sans dpi") || q.contains("avec dpi") || q.contains("avec ou sans") || q.contains("sans modifier") || q.contains("stock dpi")) -> {
+                buildString {
+                    appendLine("🛡️ **Le choix Avec ou Sans DPI est une fonctionnalité majeure de SensiFire Pro !**")
+                    appendLine()
+                    appendLine("Voici les deux stratégies possibles selon ton style de jeu :")
+                    appendLine("• **⚡ AVEC DPI OPTIMISÉ :** Calibre un DPI supérieur pour réduire la résistance de l'écran. La sensibilité peut rester équilibrée tout en conservant une glisse ultra-rapide.")
+                    appendLine("• **🛡️ SANS DPI (DPI d'origine) :** Conserve le DPI officiel de ton smartphone sans toucher aux options pour développeurs. Le moteur applique automatiquement **+18 à +28 pts de sensibilité** sur le Général et le Point Rouge pour que tes One-Taps partent sans effort !")
+                    appendLine()
+                    appendLine("Quel mode préfères-tu utiliser pour tes sessions de jeu ?")
+                }
+            }
+
+            // Admin password question
+            (q.contains("mot de passe") || q.contains("code admin") || q.contains("password") || q.contains("zax11") || q.contains("anos") || q.contains("admin")) && (q.contains("admin") || q.contains("secret") || q.contains("passer")) -> {
+                buildString {
+                    appendLine("👑 **Le mot de passe Administrateur officiel est : `Zax11`**")
+                    appendLine()
+                    appendLine("Il te débloque un accès maître complet :")
+                    appendLine("• Le catalogue complet de **plus de 75 marques et modèles mondiaux**.")
+                    appendLine("• L'accès illimité à **Anos Bot IA**.")
+                    appendLine("• La console d'administration avec les **barres d'animation live (Égaliseur & Télémétrie)**.")
+                }
+            }
+
             // General sensitivity at 200 / Full 200% question
             (q.contains("200") || (q.contains("général") && q.contains("max")) || q.contains("jamais a 200") || q.contains("jamais à 200") || q.contains("bloqué à") || q.contains("190")) -> {
                 buildString {
-                    appendLine("🔥 **La Sensibilité Maximale 200 / 200 est désormais 100% active et calibrée !**")
+                    appendLine("🔥 **Le Mode Sensibilité 200% est disponible et prêt !**")
                     appendLine()
-                    appendLine("Tu as totalement raison : pour les joueurs de style **Speed Rusher** et **One-Tap Ultra Rapide**, avoir un **Général à 200** est indispensable pour enchaîner les 360°, placer des murs de glace instantanés et punir l'ennemi au corps-à-corps !")
+                    appendLine("Pour les joueurs qui aiment une vitesse de rotation extrême au corps-à-corps :")
+                    appendLine("1. **Bouton Rapide '🔥 BOOST SENSI 200' :** Sur l'écran principal, clique sur le bouton rouge pour appliquer instantanément **Général: 200** et **Point Rouge: 200**.")
+                    appendLine("2. **Le Style '🔥 MAX 200' :** Choisis le profil Max 200 à l'étape 3 du générateur.")
                     appendLine()
-                    appendLine("⚡ **Comment activer le mode 200 dans l'application :**")
-                    appendLine("1. **Bouton Rapide '🔥 BOOST SENSI MAX 200' :** Sur l'écran de génération, clique sur le nouveau bouton orange pour appliquer immédiatement **Général: 200**, **Point Rouge: 200**, **Regard Libre: 200**.")
-                    appendLine("2. **Le Style '🔥 MAX 200' :** Dans le sélecteur de style (étape 3), choisis **Sensibilité Max 200%** pour obtenir une calibration pure 200/200.")
-                    appendLine("3. **Curseurs individuels :** Tu peux aussi glisser le curseur Général tout à droite ou appuyer sur le bouton [+] jusqu'à **200/200**.")
-                    appendLine()
-                    appendLine("🎯 **Configuration recommandée pour jouer à 200 de Général :**")
-                    appendLine("• **Général :** **200 / 200** (vitesse extrême).")
-                    appendLine("• **Point Rouge :** **200 / 200** (lock tête immédiat).")
-                    appendLine("• **Taille du Bouton de Tir :** **40% à 44%** (évite les sursauts trop hauts).")
-                    appendLine("• **DPI conseillé :** **520 à 600** pour une glisse parfaite sans décrochage.")
+                    appendLine("💡 **Conseil de coach :** Avec une sensibilité à 200, garde ton bouton de tir autour de **48% à 52%** pour ne pas dépasser la tête de l'adversaire lors de l'impulsion !")
                 }
             }
 

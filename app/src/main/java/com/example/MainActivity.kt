@@ -173,7 +173,7 @@ fun MainSensiApp(viewModel: SensiViewModel) {
                     }
 
                     Text(
-                        text = "SensiFire Pro",
+                        text = "Anos Aura VIP V2",
                         color = TextPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Black

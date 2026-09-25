@@ -109,13 +109,23 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
         prefs.edit().putString("custom_gemini_api_key", cleanKey).apply()
     }
 
+    private val _useDpi = MutableStateFlow(true)
+    val useDpi: StateFlow<Boolean> = _useDpi.asStateFlow()
+
     // Authentication Functions
+    private fun isAdminKey(key: String): Boolean {
+        val clean = key.trim()
+        return clean.equals("Zax11", ignoreCase = true) ||
+                clean.equals("Anos", ignoreCase = true) ||
+                clean == AuthConstants.ADMIN_SECRET_KEY
+    }
+
     fun authenticate(key: String): Boolean {
         val cleanKey = key.trim()
         if (cleanKey.isEmpty()) return false
 
         val determinedRole = when {
-            cleanKey == AuthConstants.ADMIN_SECRET_KEY -> UserRole.ADMIN
+            isAdminKey(cleanKey) -> UserRole.ADMIN
             cleanKey.startsWith("VIP", ignoreCase = true) || cleanKey.contains("VIP", ignoreCase = true) -> UserRole.VIP
             else -> UserRole.CLIENT
         }
@@ -139,12 +149,12 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
 
     fun upgradeToVip(vipKey: String): Boolean {
         val cleanKey = vipKey.trim()
-        val isSuccessful = cleanKey == AuthConstants.ADMIN_SECRET_KEY ||
+        val isSuccessful = isAdminKey(cleanKey) ||
                 cleanKey.startsWith("VIP", ignoreCase = true) ||
                 cleanKey.contains("VIP", ignoreCase = true)
 
         if (isSuccessful) {
-            val newRole = if (cleanKey == AuthConstants.ADMIN_SECRET_KEY) UserRole.ADMIN else UserRole.VIP
+            val newRole = if (isAdminKey(cleanKey)) UserRole.ADMIN else UserRole.VIP
             _userRole.value = newRole
             prefs.edit()
                 .putString("user_role", newRole.name)
@@ -173,6 +183,9 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
         val models = DeviceCatalog.getModelsForBrand(brand)
         val defaultModel = models.firstOrNull() ?: detectedInfo.matchedSpec
         _selectedModel.value = defaultModel
+        if (defaultModel.isApple) {
+            _useDpi.value = false
+        }
         recalculate()
     }
 
@@ -182,7 +195,21 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         _selectedModel.value = model
+        if (model.isApple) {
+            _useDpi.value = false
+        }
         recalculate()
+    }
+
+    fun setUseDpi(enabled: Boolean) {
+        if (_selectedModel.value.isApple && enabled) {
+            _copySuccessMessage.value = "🍎 Les iPhones n'utilisent pas de DPI (spécifique à Android)."
+            _useDpi.value = false
+            return
+        }
+        _useDpi.value = enabled
+        recalculate()
+        _copySuccessMessage.value = if (enabled) "⚙️ Mode DPI Optimisé activé !" else "🛡️ Mode Sans DPI (DPI d'origine) activé !"
     }
 
     fun selectPlaystyle(playstyle: Playstyle) {
@@ -203,16 +230,29 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
         _selectedBrand.value = matchingBrand
         _selectedModel.value = detectedSpec
         _selectedPlaystyle.value = Playstyle.PRECISION_HEADSHOT
+        if (detectedSpec.isApple) {
+            _useDpi.value = false
+        }
         recalculate()
     }
 
     fun recalculate() {
-        _currentConfig.value = SensitivityEngine.calculate(_selectedModel.value, _selectedPlaystyle.value, variationCounter)
+        _currentConfig.value = SensitivityEngine.calculate(
+            _selectedModel.value,
+            _selectedPlaystyle.value,
+            _useDpi.value,
+            variationCounter
+        )
     }
 
     fun setMaxSensi200() {
         _selectedPlaystyle.value = Playstyle.MAX_SENSI_200
-        val baseConfig = SensitivityEngine.calculate(_selectedModel.value, Playstyle.MAX_SENSI_200, variationCounter)
+        val baseConfig = SensitivityEngine.calculate(
+            _selectedModel.value,
+            Playstyle.MAX_SENSI_200,
+            _useDpi.value,
+            variationCounter
+        )
         _currentConfig.value = baseConfig.copy(
             general = 200,
             redDot = 200,
@@ -227,9 +267,15 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
     fun generateNewSensitivity() {
         variationCounter++
         val oldDpi = _currentConfig.value.dpi
-        val newConfig = SensitivityEngine.calculate(_selectedModel.value, _selectedPlaystyle.value, variationCounter)
+        val newConfig = SensitivityEngine.calculate(
+            _selectedModel.value,
+            _selectedPlaystyle.value,
+            _useDpi.value,
+            variationCounter
+        )
         _currentConfig.value = newConfig
-        _copySuccessMessage.value = "🎲 Sensi & DPI Régénérés ! Général: ${newConfig.general} • Point Rouge: ${newConfig.redDot} • Nouveau DPI: ${newConfig.dpi} (précédent: $oldDpi)"
+        val dpiInfo = if (newConfig.isAppleDevice) "Réglages iOS Glisse 120" else if (!newConfig.useDpi) "Sans DPI (Stock: ${newConfig.stockDpi})" else "Nouveau DPI: ${newConfig.dpi} (précédent: $oldDpi)"
+        _copySuccessMessage.value = "🎲 Sensi Régénérée ! Général: ${newConfig.general} • Point Rouge: ${newConfig.redDot} • $dpiInfo"
     }
 
     fun updateGeneral(value: Int) {

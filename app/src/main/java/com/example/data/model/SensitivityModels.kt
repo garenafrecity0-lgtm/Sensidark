@@ -10,37 +10,37 @@ enum class Playstyle(
         title = "Sensibilité Max 200%",
         subtitle = "Full 200/200 & Vitesse Ultime",
         badge = "🔥 MAX 200",
-        description = "Sensibilité Générale et Point Rouge calibrées à 200/200 pour une vitesse de rotation maximale et One-Tap instantané sans latence."
+        description = "Sensibilité Générale et Point Rouge poussées à 200/200 pour les joueurs voulant une vitesse de rotation extrême."
     ),
     PRECISION_HEADSHOT(
-        title = "Précision & One-Tap (190-200)",
+        title = "Précision & One-Tap (Calibré)",
         subtitle = "Spécial Headshot (M1887, Desert Eagle)",
         badge = "🎯 ONE-TAP",
-        description = "Général élevé (190-198) et Point Rouge ultra-vif pour déclencher le flick One-Tap instantané sans blocage sur le plastron."
+        description = "Général stable (125-138) et Point Rouge vif (130-145) pour caler le lock tête net sans que le viseur ne vole au-dessus de l'adversaire."
     ),
     SPEED_RUSHER(
-        title = "Rapidité & Rusher (195-200)",
-        subtitle = "Mouvements 360° & Mur de glace éclair",
+        title = "Rapidité & Rusher Dynamique",
+        subtitle = "Mouvements 360° & Mur de glace rapide",
         badge = "⚡ RUSHER",
-        description = "Sensibilité ultra-haute (195-200) pour les demi-tours instantanés, glissades et combats rapprochés SMG/Pompe."
+        description = "Sensibilité dynamique (145-158) pour des demi-tours fluides et duels rapprochés SMG/Pompe sans décrochage."
     ),
     BALANCED(
         title = "Équilibré & Polyvalent",
         subtitle = "Parfait pour Clash Squad & Classé BR",
         badge = "⚖️ ALL-ROUND",
-        description = "Le compromis pro idéal entre contrôle du recul, précision à mi-distance et vitesse de caméra."
+        description = "Le compromis pro idéal (115-128) entre contrôle du recul, précision à mi-distance et fluidité de caméra."
     ),
     RECOIL_CONTROL(
-        title = "Contrôle du Recul (Spray)",
+        title = "Contrôle du Recul (Anti-Recul)",
         subtitle = "Tir continu stabilisé (AK47, SCAR, M4)",
         badge = "🛡️ ANTI-RECOIL",
-        description = "Ajustement progressif pour maintenir le réticule verrouillé sur la cible lors des rafales."
+        description = "Sensibilité douce (102-116) pour maintenir le réticule verrouillé sur la cible lors des tirs en rafale continue."
     ),
     SNIPER_PRO(
         title = "Sniper & Longue Portée",
         subtitle = "Visée millimétrée (AWM, M82B, Barrett)",
         badge = "🔭 SNIPER",
-        description = "Mire sniper adoucie pour un switch d'arme fluide et des tirs chirurgicaux à longue distance."
+        description = "Mire sniper ultra-précise (35-45) pour un switch d'arme fluide et des tirs chirurgicaux à longue distance."
     )
 }
 
@@ -53,6 +53,10 @@ data class SensitivityConfig(
     val freeLook: Int,
     val dpi: Int,
     val stockDpi: Int,
+    val useDpi: Boolean = true,
+    val isAppleDevice: Boolean = false,
+    val iosGlidingSpeed: Int = 120,
+    val iosTrackingSensitivity: String = "100% (Max)",
     val fireButtonSize: Int,
     val fireButtonPosition: String,
     val dragTechnique: String,
@@ -76,4 +80,9 @@ data class DeviceSpec(
     val recommendedSafeMaxDpi: Int = 720,
     val touchSamplingHz: Int = 240,
     val ramGb: Int = 8
-)
+) {
+    val isApple: Boolean
+        get() = brand.contains("Apple", ignoreCase = true) ||
+                brand.contains("iPhone", ignoreCase = true) ||
+                model.contains("iPhone", ignoreCase = true)
+}

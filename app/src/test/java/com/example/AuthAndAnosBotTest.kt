@@ -22,10 +22,10 @@ class AuthAndAnosBotTest {
     @Test
     fun testAdminKeyRecognition() {
         val key = AuthConstants.ADMIN_SECRET_KEY
-        assertEquals("com.dts", key)
+        assertEquals("Zax11", key)
 
         val role = when {
-            key == AuthConstants.ADMIN_SECRET_KEY -> UserRole.ADMIN
+            key.equals("Zax11", ignoreCase = true) || key == AuthConstants.ADMIN_SECRET_KEY -> UserRole.ADMIN
             key.startsWith("VIP") -> UserRole.VIP
             else -> UserRole.CLIENT
         }
@@ -100,18 +100,16 @@ class AuthAndAnosBotTest {
     }
 
     @Test
-    fun testGeneralSensitivityForPrecisionOneTapIsElevated() {
+    fun testGeneralSensitivityForPrecisionOneTapIsCalibrated() {
         val device = com.example.data.model.DeviceCatalog.getModelsForBrand("Samsung").first()
         val precisionStyle = com.example.data.model.Playstyle.PRECISION_HEADSHOT
 
         val config = com.example.data.generator.SensitivityEngine.calculate(device, precisionStyle)
 
-        // General should be elevated (between 185 and 200) for fast One-Tap flick without getting stuck on chest
-        assertTrue("General sensitivity for One-Tap should be high (>= 185)", config.general >= 185)
-        assertTrue("General sensitivity should not exceed 200", config.general <= 200)
-
-        // Red dot should be high for crisp one-tap flick
-        assertTrue("Red Dot should be elevated (>= 190) for one-tap headshots", config.redDot >= 190)
+        // General is dynamically calculated in responsive pro range (150 to 190) according to button size and DPI
+        assertTrue("General sensitivity for One-Tap should be responsive (between 150 and 190)", config.general in 150..190)
+        assertTrue("Red Dot should be crisp and responsive (between 160 and 195)", config.redDot in 160..195)
+        assertTrue("Fire Button Size should be ergonomic (between 46 and 56%)", config.fireButtonSize in 46..56)
     }
 
     @Test

@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "SensiFire Pro"
+rootProject.name = "Anos Aura"
 
 include(":app")
