@@ -15,12 +15,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +41,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
@@ -75,6 +80,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +96,7 @@ import com.example.ui.theme.DarkObsidian
 import com.example.ui.theme.DarkSurface
 import com.example.ui.theme.DarkSurfaceElevated
 import com.example.ui.theme.DarkSurfaceVariant
+import com.example.ui.theme.FireCrimson
 import com.example.ui.theme.FireGold
 import com.example.ui.theme.FireOrange
 import com.example.ui.theme.HeadshotRed
@@ -385,6 +392,7 @@ fun AnosBotLockedView(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AnosBotChatView(
     viewModel: SensiViewModel,
@@ -402,18 +410,21 @@ fun AnosBotChatView(
     var customApiKeyInput by remember(geminiApiKey) { mutableStateOf(geminiApiKey) }
 
     val listState = rememberLazyListState()
+    val isImeVisible = WindowInsets.isImeVisible
 
-    LaunchedEffect(messages.size) {
+    // Automatically scroll down when new message arrives or keyboard opens
+    LaunchedEffect(messages.size, isImeVisible) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
     }
 
-    val hasActiveApiKey = AnosBotService.hasValidApiKey()
+    val hasActiveApiKey = geminiApiKey.isNotBlank() || AnosBotService.hasValidApiKey()
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .imePadding()
             .background(DarkObsidian)
     ) {
         // Top App Bar
@@ -462,7 +473,7 @@ fun AnosBotChatView(
                                 .padding(horizontal = 6.dp, vertical = 1.dp)
                         ) {
                             Text(
-                                text = if (hasActiveApiKey) "GEMINI 3.5 FLASH" else "IA CONVERSATIONNELLE",
+                                text = if (hasActiveApiKey) "GEMINI CONNECTÉ" else "IA CONVERSATIONNELLE",
                                 color = if (hasActiveApiKey) CyberGreen else FireOrange,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold
@@ -481,7 +492,7 @@ fun AnosBotChatView(
                                 .background(if (hasActiveApiKey) CyberGreen else FireGold)
                         )
                         Text(
-                            text = if (hasActiveApiKey) "En direct • Google Gemini API active" else "Moteur IA actif • Clé API configurable",
+                            text = if (hasActiveApiKey) "En direct • Google Gemini API active" else "Moteur IA actif • Coach Free Fire",
                             color = if (hasActiveApiKey) CyberGreen else FireGold,
                             fontSize = 11.sp
                         )
@@ -510,7 +521,7 @@ fun AnosBotChatView(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = if (hasActiveApiKey) "API Active" else "Clé API",
+                            text = if (hasActiveApiKey) "API Active 🟢" else "Clé API",
                             color = if (hasActiveApiKey) CyberGreen else FireGold,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -555,7 +566,7 @@ fun AnosBotChatView(
             )
         }
 
-        // Quick Suggestion Chips
+        // Quick Suggestion Chips (Gemini style)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -564,21 +575,23 @@ fun AnosBotChatView(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val suggestions = listOf(
-                "🎯 Pourquoi Général modéré ?",
-                "🔴 Où est le Point Rouge ?",
-                "🔑 Clé API Gemini",
-                "⚡ Sensi One-Tap M1887",
-                "🔥 Viseur qui dépasse la tête",
-                "📐 Quel DPI pour mon écran ?",
-                "🔘 Quelle taille pour mon bouton ?"
+                "🎯 Viseur qui dépasse la tête",
+                "💥 Sensi One-Tap M1887 & Desert Eagle",
+                "📐 DPI optimal pour mon écran",
+                "🔘 Taille idéale bouton de tir",
+                "🛡️ Comment jouer SANS DPI ?",
+                "⚡ Vitesse 360° et Mur de Glace",
+                "🔫 Réglage MP40 & UMP (SMG)",
+                "🔭 Quick-scope Sniper (AWM)",
+                "👑 Code Secret Admin"
             )
 
             suggestions.forEach { prompt ->
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(DarkSurfaceVariant)
-                        .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
+                        .border(1.dp, DarkBorder, RoundedCornerShape(14.dp))
                         .clickable {
                             viewModel.sendMessageToAnosBot(prompt)
                         }
@@ -618,19 +631,19 @@ fun AnosBotChatView(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(DarkSurface)
-                            .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DarkSurfaceElevated)
+                            .border(1.dp, FireOrange.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
                         CircularProgressIndicator(
                             color = FireOrange,
                             strokeWidth = 2.dp,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                         Text(
-                            text = "Anos Bot réfléchit et prépare sa réponse...",
-                            color = TextSecondary,
+                            text = "Anos Bot formule sa réponse tactique...",
+                            color = TextPrimary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -639,70 +652,111 @@ fun AnosBotChatView(
             }
         }
 
-        // Input Bar
-        Row(
+        // Refined Keyboard-Adaptive Chat Input Bar
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(DarkSurface)
                 .border(1.dp, DarkBorder)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                placeholder = {
-                    Text(
-                        "Pose ta question à Anos Bot (ex: sensi M1887, DPI)...",
-                        color = TextMuted,
-                        fontSize = 12.sp
-                    )
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("input_anos_bot_message"),
-                maxLines = 3,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (inputText.isNotBlank() && !isThinking) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    placeholder = {
+                        Text(
+                            "Discute avec Anos Bot (ex: mon viseur glisse trop)...",
+                            color = TextMuted,
+                            fontSize = 12.sp
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "IA",
+                            tint = FireOrange,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (inputText.isNotBlank()) {
+                            IconButton(
+                                onClick = { inputText = "" },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Effacer le texte",
+                                    tint = TextMuted,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("input_anos_bot_message"),
+                    minLines = 1,
+                    maxLines = 4,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Send
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onSend = {
+                            if (inputText.isNotBlank() && !isThinking) {
+                                viewModel.sendMessageToAnosBot(inputText)
+                                inputText = ""
+                            }
+                        }
+                    ),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = FireOrange,
+                        unfocusedBorderColor = DarkBorder,
+                        focusedContainerColor = DarkSurfaceVariant,
+                        unfocusedContainerColor = DarkSurfaceVariant
+                    ),
+                    shape = RoundedCornerShape(24.dp)
+                )
+
+                // Send Button with Energetic Gradient & TestTag
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (inputText.isNotBlank() && !isThinking) {
+                                Brush.linearGradient(listOf(FireOrange, FireCrimson))
+                            } else {
+                                Brush.linearGradient(listOf(DarkSurfaceVariant, DarkSurfaceVariant))
+                            }
+                        )
+                        .border(
+                            1.dp,
+                            if (inputText.isNotBlank() && !isThinking) FireGold.copy(alpha = 0.6f) else DarkBorder,
+                            CircleShape
+                        )
+                        .clickable(enabled = inputText.isNotBlank() && !isThinking) {
                             viewModel.sendMessageToAnosBot(inputText)
                             inputText = ""
                         }
-                    }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = FireOrange,
-                    unfocusedBorderColor = DarkBorder,
-                    focusedContainerColor = DarkSurfaceVariant,
-                    unfocusedContainerColor = DarkSurfaceVariant
-                ),
-                shape = RoundedCornerShape(16.dp)
-            )
-
-            IconButton(
-                onClick = {
-                    if (inputText.isNotBlank() && !isThinking) {
-                        viewModel.sendMessageToAnosBot(inputText)
-                        inputText = ""
-                    }
-                },
-                enabled = inputText.isNotBlank() && !isThinking,
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(if (inputText.isNotBlank() && !isThinking) FireOrange else DarkBorder)
-                    .testTag("btn_send_anos_bot")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Envoyer",
-                    tint = if (inputText.isNotBlank() && !isThinking) Color.White else TextMuted,
-                    modifier = Modifier.size(20.dp)
-                )
+                        .testTag("btn_send_anos_bot"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = "Envoyer",
+                        tint = if (inputText.isNotBlank() && !isThinking) Color.White else TextMuted,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -712,15 +766,62 @@ fun AnosBotChatView(
             onDismissRequest = { showApiKeyDialog = false },
             containerColor = DarkSurfaceElevated,
             title = {
-                Text("Clé API Gemini (Optionnel)", color = TextPrimary, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Key, contentDescription = null, tint = FireGold)
+                    Text("Configuration Clé API Gemini", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Status Banner
+                    val activeKey = AnosBotService.getActiveApiKey()
+                    val masked = AnosBotService.getMaskedApiKey()
+                    val isSystem = AnosBotService.isUsingSystemKey()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (activeKey.isNotBlank()) CyberGreen.copy(alpha = 0.15f) else FireOrange.copy(alpha = 0.15f))
+                            .border(1.dp, if (activeKey.isNotBlank()) CyberGreen.copy(alpha = 0.4f) else FireOrange.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(if (activeKey.isNotBlank()) CyberGreen else FireOrange)
+                                )
+                                Text(
+                                    text = if (activeKey.isNotBlank()) "Clé API Active & Fonctionnelle 🟢" else "Aucune Clé Configurée 🔴",
+                                    color = if (activeKey.isNotBlank()) CyberGreen else FireOrange,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            if (activeKey.isNotBlank()) {
+                                Text(
+                                    text = "Clé : $masked (${if (isSystem) "Système intégrée" else "Personnalisée"})",
+                                    color = TextPrimary,
+                                    fontSize = 11.sp
+                                )
+                                Text(
+                                    text = "Modèles supportés : Gemini 3.1 Flash Lite & 3.5 Flash",
+                                    color = TextSecondary,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+
                     Text(
-                        "Vous pouvez insérer votre propre clé API Google AI Studio pour un flux direct avec le modèle Gemini 3.5 Flash :",
+                        "Vous pouvez conserver la clé système intégrée ou renseigner votre propre clé Google AI Studio :",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
+
                     OutlinedTextField(
                         value = customApiKeyInput,
                         onValueChange = { customApiKeyInput = it },
@@ -734,6 +835,19 @@ fun AnosBotChatView(
                         ),
                         modifier = Modifier.fillMaxWidth().testTag("input_custom_gemini_key")
                     )
+
+                    if (viewModel.systemApiKey.isNotBlank() && customApiKeyInput != viewModel.systemApiKey) {
+                        TextButton(
+                            onClick = {
+                                customApiKeyInput = viewModel.systemApiKey
+                                viewModel.resetToSystemApiKey()
+                                Toast.makeText(context, "Clé système réactivée !", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.align(Alignment.End)
+                        ) {
+                            Text("Rétablir clé système", color = FireGold, fontSize = 11.sp)
+                        }
+                    }
                 }
             },
             confirmButton = {

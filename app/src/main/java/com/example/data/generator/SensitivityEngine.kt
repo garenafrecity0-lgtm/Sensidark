@@ -142,8 +142,17 @@ object SensitivityEngine {
             (baseRedDot + (hardwareModifier / 2) + buttonSizeBonus + (dpiCompensationOnSensi / 2) + redDotVariation).coerceIn(125, 200)
         }
 
-        val final2x = (base2x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(90, 195)
-        val final4x = (base4x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(80, 185)
+        val final2x = if (playstyle == Playstyle.MAX_SENSI_200) {
+            200
+        } else {
+            (base2x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(90, 195)
+        }
+
+        val final4x = if (playstyle == Playstyle.MAX_SENSI_200) {
+            200
+        } else {
+            (base4x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(80, 185)
+        }
         val finalSniper = (baseSniper + (refreshFactor / 2) + (scopeVariation / 2)).coerceIn(30, 65)
         val finalFreeLook = (baseFreeLook + (hardwareModifier / 2) + generalVariation).coerceIn(40, 80)
         val finalButtonSize = (recommendedButtonSize + buttonVariation).coerceIn(44, 58)

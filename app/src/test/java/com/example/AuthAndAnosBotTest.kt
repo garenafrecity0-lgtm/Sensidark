@@ -169,9 +169,9 @@ class AuthAndAnosBotTest {
         val device = com.example.data.model.DeviceCatalog.getModelsForBrand("Samsung").first()
         val playstyle = com.example.data.model.Playstyle.PRECISION_HEADSHOT
 
-        val config1 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, 1)
-        val config2 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, 2)
-        val config3 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, 3)
+        val config1 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, useDpi = true, variationSeed = 1)
+        val config2 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, useDpi = true, variationSeed = 2)
+        val config3 = com.example.data.generator.SensitivityEngine.calculate(device, playstyle, useDpi = true, variationSeed = 3)
 
         // DPI must vary across configurations
         val dpis = setOf(config1.dpi, config2.dpi, config3.dpi)

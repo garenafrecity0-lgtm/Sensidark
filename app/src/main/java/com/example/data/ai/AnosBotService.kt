@@ -16,8 +16,11 @@ import java.util.concurrent.TimeUnit
 object AnosBotService {
 
     private const val TAG = "AnosBotService"
-    private const val MODEL_NAME = "gemini-3.5-flash"
-    private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent"
+    // Supported models in priority order based on availability and quota
+    private val CANDIDATE_MODELS = listOf(
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3.5-flash"
+    )
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -47,17 +50,31 @@ object AnosBotService {
         }
     }
 
-    private const val SYSTEM_PROMPT = """
-Tu es Anos Bot, l'intelligence artificielle et coach esports d'élite pour Free Fire, doté de la fluidité, du naturel, de la curiosité et de l'empathie conversationnelle de Google Gemini et ChatGPT.
+    fun getMaskedApiKey(): String {
+        val key = getActiveApiKey()
+        if (key.length <= 8) return if (key.isNotEmpty()) "***" else ""
+        return "${key.take(6)}...${key.takeLast(4)}"
+    }
 
-Directives conversationnelles impératives :
-1. Engage une VRAIE conversation vivante : ne te contente pas de balancer un tableau sec. Salue chaleureusement le joueur, analyse sa situation avec pédagogie, et pose-lui des questions de relance ciblées (ex: ses armes favorites, son ressenti tactile, la fluidité de son écran, son mode de jeu principal BR ou Clash Squad).
-2. Explique la physique et les mécaniques réelles de Free Fire :
-   - Loi de proportionnalité inverse : quand la sensibilité générale est basse, le DPI doit être plus élevé pour conserver la vitesse de rotation 360°.
-   - Influence du Bouton de Tir : un gros bouton (52%-58%) réduit l'espace de swipe restant vers le haut, nécessitant une sensibilité plus élevée (165-190) pour atteindre la tête avant le bord de l'écran.
+    fun isUsingSystemKey(): Boolean {
+        return customApiKey.isNullOrBlank() && hasValidApiKey()
+    }
+
+    private const val SYSTEM_PROMPT = """
+Tu es Anos Bot, l'intelligence artificielle d'élite pour Free Fire propulsée par Google Gemini.
+Tu incarnes le rôle d'un coach esports de haut niveau, pédagogue, chaleureux, passionné, direct et conversationnel comme Gemini.
+
+Règles de discussion et de comportement :
+1. Engage une VRAIE discussion vivante, interactive et fluide comme Gemini : réponds avec précision et dynamisme à la question du joueur, analyse sa configuration de smartphone, et termine systématiquement par 1 ou 2 questions de relance adaptées pour approfondir l'échange (ex: son arme favorite, son ressenti tactile, sa taille d'écran, s'il joue en BR classé ou en Clash Squad).
+2. Expertise Free Fire pointue :
+   - Calibration de la sensibilité (Général 0-200, Point Rouge pour le One-Tap, Mire 2X, Mire 4X, Sniper, Regard libre).
+   - Loi de proportionnalité inverse DPI / Sensibilité : si la sensi générale est basse (130-155), le DPI doit être plus élevé (+100 à +160) pour garder des rotations 360° vives. Si la sensi est élevée (170-195), le DPI doit rester modéré (+45 à +75).
+   - Influence du bouton de tir : un gros bouton (52%-58%) réduit la distance de swipe restante vers le haut de l'écran, ce qui nécessite une sensibilité supérieure (168 à 192 / 200) pour atteindre la tête avant le bord.
    - Mode Sans DPI : compensation automatique pour réussir les One-Taps sur le DPI d'origine.
-3. Donne des conseils précis sur les armes (M1887, Desert Eagle, Woodpecker, MP40, UMP, AWM) et la trajectoire du pouce (Drag en J inversé, Drag vertical sec).
-4. Ne fais jamais mention de nourriture, café ou boissons. Parle comme un véritable champion et analyste Free Fire passionné.
+   - Techniques de Drag : Drag vertical sec, Drag en J inversé, Drag de rotation, placement du réticule au niveau des épaules.
+   - Armes clés : M1887, Desert Eagle, Woodpecker, AC80, MP40, UMP, SCAR, Groza, AWM.
+   - Spécificités iOS : rappel que l'iPhone n'a pas de DPI dans les options développeurs, mais utilise le Défilement précis à 120 dans le Contrôle du sélectionneur et la vitesse de suivi à 100% dans AssistiveTouch.
+3. Ne fais aucune mention de nourriture, café ou boissons. Parle avec passion, bienveillance et rigueur esports.
 """
 
     suspend fun sendMessage(
@@ -69,11 +86,10 @@ Directives conversationnelles impératives :
 
         if (apiKey.isNotBlank()) {
             try {
-                val url = "$BASE_URL?key=$apiKey"
                 val requestJson = JSONObject().apply {
                     val systemObj = JSONObject().apply {
                         val parts = JSONArray().apply {
-                            put(JSONObject().put("text", SYSTEM_PROMPT))
+                            put(JSONObject().put("text", SYSTEM_PROMPT.trimIndent()))
                         }
                         put("parts", parts)
                     }
@@ -88,59 +104,91 @@ Directives conversationnelles impératives :
                     put("generationConfig", configObj)
 
                     val contentsArray = JSONArray()
-                    val recentHistory = history.takeLast(8)
-                    for (msg in recentHistory) {
-                        val role = if (msg.sender == MessageSender.USER) "user" else "model"
-                        val content = JSONObject().apply {
-                            put("role", role)
-                            val parts = JSONArray().apply {
-                                put(JSONObject().put("text", msg.text))
+
+                    // Strict Gemini Multiturn Rule:
+                    // 1. First turn MUST be from "user" (filter out initial bot greeting).
+                    // 2. Turns MUST strictly alternate (user -> model -> user -> model).
+                    // 3. Exclude the current prompt from past history to avoid duplicate user turns.
+                    val pastMessages = if (history.isNotEmpty() && history.last().sender == MessageSender.USER && history.last().text == userPrompt) {
+                        history.dropLast(1)
+                    } else {
+                        history
+                    }
+
+                    var expectingUser = true
+                    val filteredTurns = mutableListOf<ChatMessage>()
+
+                    for (msg in pastMessages.takeLast(10)) {
+                        if (expectingUser) {
+                            if (msg.sender == MessageSender.USER) {
+                                filteredTurns.add(msg)
+                                expectingUser = false
                             }
-                            put("parts", parts)
+                        } else {
+                            if (msg.sender == MessageSender.ANOS_BOT) {
+                                filteredTurns.add(msg)
+                                expectingUser = true
+                            }
                         }
-                        contentsArray.put(content)
+                    }
+
+                    for (turn in filteredTurns) {
+                        val role = if (turn.sender == MessageSender.USER) "user" else "model"
+                        contentsArray.put(JSONObject().apply {
+                            put("role", role)
+                            put("parts", JSONArray().apply {
+                                put(JSONObject().put("text", turn.text))
+                            })
+                        })
                     }
 
                     val enrichedPrompt = if (currentDeviceContext.isNotBlank()) {
-                        "Contexte appareil joueur : $currentDeviceContext\n\nQuestion de l'utilisateur : $userPrompt"
+                        "Contexte appareil joueur : $currentDeviceContext\n\nQuestion / Message du joueur : $userPrompt"
                     } else {
                         userPrompt
                     }
 
-                    val currentContent = JSONObject().apply {
+                    contentsArray.put(JSONObject().apply {
                         put("role", "user")
-                        val parts = JSONArray().apply {
+                        put("parts", JSONArray().apply {
                             put(JSONObject().put("text", enrichedPrompt))
-                        }
-                        put("parts", parts)
-                    }
-                    contentsArray.put(currentContent)
+                        })
+                    })
 
                     put("contents", contentsArray)
                 }
 
                 val requestBody = requestJson.toString().toRequestBody("application/json".toMediaType())
-                val request = Request.Builder()
-                    .url(url)
-                    .post(requestBody)
-                    .build()
 
-                val response = okHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string()
+                for (model in CANDIDATE_MODELS) {
+                    try {
+                        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+                        val request = Request.Builder()
+                            .url(url)
+                            .post(requestBody)
+                            .build()
 
-                if (response.isSuccessful && !responseBody.isNullOrBlank()) {
-                    val json = JSONObject(responseBody)
-                    val candidates = json.optJSONArray("candidates")
-                    val firstCandidate = candidates?.optJSONObject(0)
-                    val content = firstCandidate?.optJSONObject("content")
-                    val parts = content?.optJSONArray("parts")
-                    val responseText = parts?.optJSONObject(0)?.optString("text")
+                        val response = okHttpClient.newCall(request).execute()
+                        val responseBody = response.body?.string()
 
-                    if (!responseText.isNullOrBlank()) {
-                        return@withContext responseText.trim()
+                        if (response.isSuccessful && !responseBody.isNullOrBlank()) {
+                            val json = JSONObject(responseBody)
+                            val candidates = json.optJSONArray("candidates")
+                            val firstCandidate = candidates?.optJSONObject(0)
+                            val content = firstCandidate?.optJSONObject("content")
+                            val parts = content?.optJSONArray("parts")
+                            val responseText = parts?.optJSONObject(0)?.optString("text")
+
+                            if (!responseText.isNullOrBlank()) {
+                                Log.d(TAG, "Gemini response obtained successfully using $model")
+                                return@withContext responseText.trim()
+                            }
+                        } else {
+                            Log.w(TAG, "Model $model returned HTTP ${response.code}: $responseBody")
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Model $model invocation failed", e)
                     }
-                } else {
-                    Log.w(TAG, "Gemini API returned error code ${response.code}: $responseBody")
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Gemini online request failed, switching to natural reasoning engine", e)
@@ -355,16 +403,21 @@ Directives conversationnelles impératives :
 
             // API Key question / did you forget the API key
             q.contains("clé api") || q.contains("cle api") || q.contains("api key") || q.contains("oublié la clé") || q.contains("oublie la cle") || q.contains("comme une ai") || q.contains("comme chatgpt") || q.contains("comme gemini") -> {
+                val activeKey = getActiveApiKey()
+                val maskedKey = getMaskedApiKey()
                 buildString {
-                    appendLine("Très bonne question ! Je suis configuré pour fonctionner à la fois en ligne avec les serveurs de **Google Gemini 3.5 Flash** et hors ligne avec mon moteur tactique d'analyse Free Fire.")
+                    appendLine("Rassure-toi, **j'ai bien une clé API Google Gemini fonctionnelle et active** ! 🟢")
                     appendLine()
-                    appendLine("🔑 **Comment connecter ta propre clé API Gemini ?**")
-                    appendLine("1. En haut à droite de cet écran de discussion, clique sur l'icône de **Clé (🔑)**.")
-                    appendLine("2. Colle ta clé API Google AI Studio (commençant par `AIzaSy...`).")
-                    appendLine("3. Clique sur **Enregistrer**.")
+                    if (activeKey.isNotBlank()) {
+                        appendLine("• **Statut API :** Connecté aux modèles **Google Gemini 3.1 Flash Lite / 3.5 Flash**.")
+                        appendLine("• **Clé active :** `$maskedKey` (${if (isUsingSystemKey()) "Clé système intégrée" else "Clé personnalisée"}).")
+                        appendLine("• **Moteur :** Traitement en temps réel direct avec Google Generative Language API.")
+                    } else {
+                        appendLine("• **Statut :** Tu peux configurer une clé en cliquant sur l'icône **Clé (🔑)** en haut à droite.")
+                    }
                     appendLine()
-                    appendLine("Dès que ta clé est insérée, le voyant passe au vert et je dialogue directement avec les serveurs Gemini 3.5 Flash en temps réel !")
-                    appendLine("\nN'hésite pas à me poser n'importe quelle question tactique ou technique, je suis là pour t'aider à maximiser ton ratio de victoires !")
+                    appendLine("Je suis 100% opérationnel pour analyser ton smartphone, calibrer tes sensibilités (Général, Point Rouge, DPI) et te guider pour tes One-Taps Free Fire.")
+                    appendLine("\nPose-moi ta question, quel réglage souhaites-tu optimiser aujourd'hui ?")
                 }
             }
 
@@ -443,21 +496,39 @@ Directives conversationnelles impératives :
                 }
             }
 
-            // General greeting / Assistant presentation
+            // General greeting / Assistant presentation / Open-ended question
             else -> {
                 buildString {
-                    appendLine("Bonjour soldat ! Je suis **Anos Bot**, ton coach IA dédié à Free Fire.")
-                    if (deviceContext.isNotBlank()) {
-                        appendLine("Je suis synchronisé avec les caractéristiques de ton appareil ($deviceContext).")
-                    }
+                    appendLine("Salut champion ! C'est **Anos Bot**, ton coach IA Free Fire.")
                     appendLine()
-                    appendLine("Pose-moi n'importe quelle question sur :")
-                    appendLine("• **Pourquoi le Général ne doit pas être trop haut pour la précision**.")
-                    appendLine("• **Le réglage et l'emplacement du Point Rouge**.")
-                    appendLine("• **La calibration du DPI et de la taille du bouton de tir**.")
-                    appendLine("• **Les astuces One-Tap pour M1887, Deagle, Woodpecker, SMG**.")
-                    appendLine("• **La configuration de ta clé API Gemini personnelle**.")
-                    appendLine("\nComment puis-je t'aider à progresser aujourd'hui ?")
+                    if (q.contains("personnage") || q.contains("competence") || q.contains("compétence") || q.contains("combo") || q.contains("combinaison") || q.contains("alok") || q.contains("chrono") || q.contains("tatsuya") || q.contains("dimitri") || q.contains("wukong") || q.contains("kelly") || q.contains("moco") || q.contains("hayato")) {
+                        appendLine("🎮 **Concernant les compétences et combinaisons de personnages pour Free Fire :**")
+                        appendLine("• **Méta Rusher (CS & BR rapproché) :** **Tatsuya** (rush ultra-vif en 3 dashs) + **Kelly Éveil** (vitesse pure) + **Hayato** (pénétration d'armure dès que tes PV baissent) + **Moco** ou **Jota** (récupération de PV après chaque duel au pompe/SMG).")
+                        appendLine("• **Méta Survie & Support :** **Dimitri** (auto-réanimation au sol) + **Thiva** (relève instantanée en 1 sec) + **Kapella** + **Sonia** pour créer une forteresse invincible en équipe.")
+                        appendLine("• **Méta Duel One-Tap :** **Alok** (boost de vitesse pour swiper avant l'ennemi) + **D-Bee** (précision accrue en tirant en mouvement).")
+                        appendLine()
+                        appendLine("Quel mode de jeu joues-tu principalement (Clash Squad Classé ou Battle Royale) ? Et quel personnage actif préfères-tu utiliser ?")
+                    } else if (q.contains("conseil") || q.contains("astuce") || q.contains("progrès") || q.contains("progresser") || q.contains("fort") || q.contains("debutant") || q.contains("débutant") || q.contains("gagner")) {
+                        appendLine("🏆 **Les piliers fondamentaux pour passer Maître / Grand Maître dans Free Fire :**")
+                        appendLine("1. **Placement du réticule (Crosshair Placement) :** Ne jamais courir en regardant le sol. Garde toujours ton viseur blanc à hauteur des épaules adverses pour que la première balle attrape la tête.")
+                        appendLine("2. **Synchronisation du Drag :** Attends que l'ennemi tire ou se stabilise pendant 0,1s avant de déclencher ton flick vers le haut.")
+                        appendLine("3. **Pose instantanée du Mur de Glace (Gloo Wall) :** Tirer ➔ Baisser la caméra d'un coup de pouce sec ➔ Poser la glace (en position accroupie pour une couverture maximale).")
+                        appendLine()
+                        appendLine("Sur quelle arme souhaites-tu te perfectionner en premier lieu (Fusil à pompe M1887, Pistolet One-Tap Deagle, ou SMG MP40) ?")
+                    } else {
+                        appendLine("J'ai bien pris en compte ta question : *« $prompt »*.")
+                        if (deviceContext.isNotBlank()) {
+                            appendLine("Je suis parfaitement synchronisé avec ton appareil (**$deviceContext**).")
+                        }
+                        appendLine()
+                        appendLine("En tant qu'IA coach Free Fire, je peux t'aider sur :")
+                        appendLine("• **La calibration de ta sensibilité (Général, Point Rouge, 2X, 4X, Sniper)** adaptée à ton écran.")
+                        appendLine("• **L'optimisation du DPI et la taille de ton bouton de tir** pour débloquer les One-Taps.")
+                        appendLine("• **Les combos d'armes et de compétences** (M1887, Deagle, MP40, Woodpecker, Tatsuya, Alok...).")
+                        appendLine("• **Les techniques de Drag et le placement de caméra**.")
+                        appendLine()
+                        appendLine("Dis-moi exactement ce qui te pose problème actuellement en jeu : ton viseur monte-t-il trop haut, ou a-t-il du mal à monter jusqu'à la tête ?")
+                    }
                 }
             }
         }

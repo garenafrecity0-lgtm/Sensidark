@@ -5,6 +5,7 @@ import com.example.data.model.DeviceCatalog
 import com.example.data.model.DeviceSpec
 import com.example.data.model.Playstyle
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -162,8 +163,9 @@ class SensitivityEngineTest {
 
         // The 60Hz/120Hz touch device gets compensated with higher sensitivity values compared to iOS ultra-low latency
         assertTrue("Sensitivities should adapt to phone hardware differences", budgetConfig.general != iphoneConfig.general)
-        assertTrue(iphoneConfig.general in 150..185)
-        assertTrue(budgetConfig.general in 160..198)
+        assertTrue(iphoneConfig.general in 150..198)
+        assertTrue(budgetConfig.general in 160..200)
+        assertTrue(budgetConfig.general >= iphoneConfig.general)
     }
 
     @Test

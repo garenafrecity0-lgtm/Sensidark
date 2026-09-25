@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.BuildConfig
 import com.example.data.ai.AnosBotService
 import com.example.data.ai.ChatMessage
 import com.example.data.ai.MessageSender
@@ -76,12 +77,12 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
     private val _copySuccessMessage = MutableStateFlow<String?>(null)
     val copySuccessMessage: StateFlow<String?> = _copySuccessMessage.asStateFlow()
 
-    // Anos Bot Chat State
+    // Anos Bot Chat State - Interactive Gemini-style conversation
     private val _chatMessages = MutableStateFlow<List<ChatMessage>>(
         listOf(
             ChatMessage(
                 sender = MessageSender.ANOS_BOT,
-                text = "Bonjour ! Je suis **Anos Bot**, ton intelligence artificielle d'élite pour Free Fire.\n\nJe calcule en temps réel tes sensibilités optimales (0-200), ton DPI personnalisé et la taille de ton bouton de tir pour réussir tes One-Taps. Quelle arme ou quel smartphone veux-tu optimiser aujourd'hui ?"
+                text = "Salut champion ! 👋 Je suis **Anos Bot**, ton coach IA et expert en calibration Free Fire.\n\nJe suis là pour échanger avec toi et t'aider à dominer tes duels avec des réglages chirurgicaux (Sensibilités 0-200, DPI optimal, taille du bouton de tir et techniques de Drag).\n\n🎮 **Pour débuter notre entraînement, dis-moi :**\n• Rencontres-tu un problème de **viseur qui vole au-dessus de la tête** ou qui **reste bloqué sur le plastron** ?\n• Quelle arme joues-tu le plus souvent (M1887, Desert Eagle, Woodpecker ou MP40) ?\n• Joues-tu **Avec ou Sans modification du DPI** ?\n\nPose-moi n'importe quelle question ou clique sur une suggestion ci-dessous pour démarrer !"
             )
         )
     )
@@ -92,6 +93,13 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
 
     private var variationCounter = 0
 
+    val systemApiKey: String = try {
+        val key = BuildConfig.GEMINI_API_KEY
+        if (!key.isNullOrBlank() && key != "DEFAULT_API_KEY") key.trim() else ""
+    } catch (_: Exception) {
+        ""
+    }
+
     init {
         val savedGeminiKey = prefs.getString("custom_gemini_api_key", null)
         if (!savedGeminiKey.isNullOrBlank()) {
@@ -99,14 +107,26 @@ class SensiViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private val _geminiApiKey = MutableStateFlow(prefs.getString("custom_gemini_api_key", "") ?: "")
+    private val _geminiApiKey = MutableStateFlow(
+        prefs.getString("custom_gemini_api_key", null) ?: systemApiKey
+    )
     val geminiApiKey: StateFlow<String> = _geminiApiKey.asStateFlow()
 
     fun saveCustomGeminiApiKey(key: String) {
         val cleanKey = key.trim()
-        _geminiApiKey.value = cleanKey
-        AnosBotService.customApiKey = cleanKey.ifBlank { null }
-        prefs.edit().putString("custom_gemini_api_key", cleanKey).apply()
+        if (cleanKey.isBlank() || cleanKey == systemApiKey) {
+            resetToSystemApiKey()
+        } else {
+            _geminiApiKey.value = cleanKey
+            AnosBotService.customApiKey = cleanKey
+            prefs.edit().putString("custom_gemini_api_key", cleanKey).apply()
+        }
+    }
+
+    fun resetToSystemApiKey() {
+        _geminiApiKey.value = systemApiKey
+        AnosBotService.customApiKey = null
+        prefs.edit().remove("custom_gemini_api_key").apply()
     }
 
     private val _useDpi = MutableStateFlow(true)
