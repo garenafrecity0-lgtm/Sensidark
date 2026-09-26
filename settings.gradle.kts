@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Anos Aura"
+rootProject.name = "Anos Sensi V2"
 
 include(":app")

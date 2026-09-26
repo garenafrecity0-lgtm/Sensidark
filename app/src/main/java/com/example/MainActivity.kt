@@ -26,15 +26,15 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material.icons.outlined.Tune
@@ -99,7 +99,7 @@ enum class SensiNavTab(
     ANOS_BOT("Anos Bot IA", Icons.Filled.Psychology, Icons.Outlined.Psychology, "tab_anos_bot"),
     SIMULATOR("Bouton & Drag", Icons.Filled.SportsEsports, Icons.Outlined.SportsEsports, "tab_simulator"),
     FAVORITES("Favoris", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder, "tab_favorites"),
-    GUIDE("Tuto DPI", Icons.Filled.MenuBook, Icons.Outlined.MenuBook, "tab_guide")
+    GUIDE("Tuto DPI", Icons.AutoMirrored.Filled.MenuBook, Icons.AutoMirrored.Outlined.MenuBook, "tab_guide")
 }
 
 class MainActivity : ComponentActivity() {
@@ -173,7 +173,7 @@ fun MainSensiApp(viewModel: SensiViewModel) {
                     }
 
                     Text(
-                        text = "Anos Aura VIP V2",
+                        text = "Anos Sensi V2",
                         color = TextPrimary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Black
@@ -219,7 +219,7 @@ fun MainSensiApp(viewModel: SensiViewModel) {
                     modifier = Modifier.size(32.dp).testTag("btn_logout_action")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ExitToApp,
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                         contentDescription = "Changer de clé / Déconnexion",
                         tint = TextMuted,
                         modifier = Modifier.size(18.dp)

@@ -140,14 +140,14 @@ fun AuthScreen(
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "ANOS AURA VIP V2",
+                text = "ANOS SENSI V2",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Black,
                 color = TextPrimary,
                 letterSpacing = 1.sp
             )
             Text(
-                text = "Portail d'Accès VIP V2 & Calibration Free Fire",
+                text = "Générateur Ultime de Sensibilité & Calibration Free Fire",
                 fontSize = 12.sp,
                 color = TextSecondary,
                 textAlign = TextAlign.Center

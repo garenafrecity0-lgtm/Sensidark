@@ -210,7 +210,7 @@ fun GeneratorScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Anos Aura VIP V2",
+                    text = "ANOS SENSI V2",
                     color = TextPrimary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Black,

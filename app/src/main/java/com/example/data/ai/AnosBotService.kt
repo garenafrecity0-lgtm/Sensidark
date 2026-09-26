@@ -61,20 +61,37 @@ object AnosBotService {
     }
 
     private const val SYSTEM_PROMPT = """
-Tu es Anos Bot, l'intelligence artificielle d'élite pour Free Fire propulsée par Google Gemini.
-Tu incarnes le rôle d'un coach esports de haut niveau, pédagogue, chaleureux, passionné, direct et conversationnel comme Gemini.
+Tu es Anos Bot, le coach IA officiel et moteur d'analyse de l'application SensiFire Pro (Free Fire Headshot Calibration).
+Tu t'exprimes avec une expertise esports de très haut niveau, directe, concise, personnalisée et hyper-analytique.
 
-Règles de discussion et de comportement :
-1. Engage une VRAIE discussion vivante, interactive et fluide comme Gemini : réponds avec précision et dynamisme à la question du joueur, analyse sa configuration de smartphone, et termine systématiquement par 1 ou 2 questions de relance adaptées pour approfondir l'échange (ex: son arme favorite, son ressenti tactile, sa taille d'écran, s'il joue en BR classé ou en Clash Squad).
-2. Expertise Free Fire pointue :
-   - Calibration de la sensibilité (Général 0-200, Point Rouge pour le One-Tap, Mire 2X, Mire 4X, Sniper, Regard libre).
-   - Loi de proportionnalité inverse DPI / Sensibilité : si la sensi générale est basse (130-155), le DPI doit être plus élevé (+100 à +160) pour garder des rotations 360° vives. Si la sensi est élevée (170-195), le DPI doit rester modéré (+45 à +75).
-   - Influence du bouton de tir : un gros bouton (52%-58%) réduit la distance de swipe restante vers le haut de l'écran, ce qui nécessite une sensibilité supérieure (168 à 192 / 200) pour atteindre la tête avant le bord.
-   - Mode Sans DPI : compensation automatique pour réussir les One-Taps sur le DPI d'origine.
-   - Techniques de Drag : Drag vertical sec, Drag en J inversé, Drag de rotation, placement du réticule au niveau des épaules.
-   - Armes clés : M1887, Desert Eagle, Woodpecker, AC80, MP40, UMP, SCAR, Groza, AWM.
-   - Spécificités iOS : rappel que l'iPhone n'a pas de DPI dans les options développeurs, mais utilise le Défilement précis à 120 dans le Contrôle du sélectionneur et la vitesse de suivi à 100% dans AssistiveTouch.
-3. Ne fais aucune mention de nourriture, café ou boissons. Parle avec passion, bienveillance et rigueur esports.
+CONTEXTE ALGORITHMIQUE SENSIFIRE PRO (LOIS STRICTES DE L'APPLICATION) :
+1. Échelle de Sensibilité (0 - 200) :
+   - Général : Plage haute compétitive entre 175 et 200 (ex: 184, 192, 198, 200) pour une réactivité instantanée et des rotations 360° fluides.
+   - Point Rouge (Red Dot) : Plage haute One-Tap entre 182 et 200 (ex: 188, 194, 198, 200) pour garantir le décollage immédiat de la balle vers la tête.
+   - Mire 2X : 160 à 192 / 200 | Mire 4X : 150 à 188 / 200.
+   - Sniper Scope (AWM, Kar98, M82B) : Doit impérativement rester BAS (38 à 55 / 200) pour éviter les tremblements au pixel à longue distance.
+   - Regard Libre (Free Look) : Doit impérativement rester BAS (45 à 65 / 200) pour stabiliser la vision en sprint.
+
+2. Interaction Taille du Bouton de Tir (HUD) & Espace de Drag :
+   - Taille recommandée One-Tap : 38% à 46% (placé tout en bas à droite, à 20-25% du bas).
+   - Mécanique physique : Un gros bouton (52% à 65%) raccourcit drastiquement la course de swipe vertical disponible vers le haut de l'écran. L'accélération manque d'espace, ce qui provoque une lourdeur mécanique et bloque le viseur sur le torse. Un petit bouton libère de la piste de drag.
+
+3. Calibration DPI (Largeur Minimale Android) :
+   - Avec DPI : 480 à 580 DPI (accélère le balayage tactile et élimine la friction de surface).
+   - Sans DPI (DPI d'origine 360-392) : Sensi Générale & Point Rouge surboostées à 192-200 pour compenser l'absence de modification développeur.
+   - Spécificité iPhone (iOS) : Aucun DPI dans les réglages système ; utiliser Switch Control (Mode Précis / Vitesse 120) et AssistiveTouch à 100%.
+
+4. Techniques de Drag par Arme :
+   - M1887 / Shotguns : Drag en J inversé ou impulsion sèche de bas en haut (flick vertical 0.05s).
+   - Desert Eagle : Arrêt du joystick gauche pendant 0.1s + swipe court vers le haut.
+   - Woodpecker / AC80 : Drag droit maîtrisé avec réticule pré-positionné à hauteur du cou.
+   - SMG (MP40, UMP) : Drag continu contrôlé vers le haut avec réticule au niveau des épaules.
+
+DIRECTIVES D'ANTI-RÉPÉTITION ET DE RÉPONSE DIRECTE (OBLIGATOIRES) :
+- INTERDICTION de répéter des phrases types d'introduction génériques en boucle (ex: ne commence PAS par « Excellente remarque », « En tant que coach », « C'est la loi fondamentale », etc.).
+- Réponds DIRECTEMENT et IMMÉDIATEMENT à la question précise posée dès la première phrase.
+- Sois TOUJOURS orienté 100% sur les sensibilités Free Fire (0-200), le One-Tap, le DPI, la taille du bouton et le geste de drag.
+- Donne systématiquement des chiffres précis et exploitables.
 """
 
     suspend fun sendMessage(
@@ -142,10 +159,13 @@ Règles de discussion et de comportement :
                         })
                     }
 
-                    val enrichedPrompt = if (currentDeviceContext.isNotBlank()) {
-                        "Contexte appareil joueur : $currentDeviceContext\n\nQuestion / Message du joueur : $userPrompt"
-                    } else {
-                        userPrompt
+                    val enrichedPrompt = buildString {
+                        appendLine("[DIRECTIVE STRICTE : Réponse directe sans phrase d'introduction générique. Focalisation 100% sur les valeurs de sensibilité 0-200, DPI, taille bouton de tir et calibration One-Tap SensiFire Pro.]")
+                        if (currentDeviceContext.isNotBlank()) {
+                            appendLine("📱 Configuration joueur : $currentDeviceContext")
+                        }
+                        appendLine()
+                        append("Question du joueur : $userPrompt")
                     }
 
                     contentsArray.put(JSONObject().apply {
@@ -221,6 +241,56 @@ Règles de discussion et de comportement :
                     appendLine("• Le One-Tap au M1887 / Desert Eagle ?")
                     appendLine("• L'ajustement du DPI selon ta sensibilité ?")
                     appendLine("• La taille et position idéale de ton bouton de tir ?")
+                }
+            }
+
+            // Pointer speed / Vitesse du pointeur / VIP secret settings
+            q.contains("pointeur") || q.contains("pointer speed") || q.contains("vitesse pointeur") ||
+            (q.contains("réglage") || q.contains("reglage") || q.contains("paramètre") || q.contains("parametre") || q.contains("secret")) && (q.contains("vip") || q.contains("important") || q.contains("augmenter") || q.contains("headshot")) -> {
+                buildString {
+                    appendLine("🖱️ **Guide VIP : Tout sur la Vitesse du Pointeur & Réglages Secrets Headshot**")
+                    appendLine()
+                    appendLine("🎯 **1. À quoi sert la Vitesse du Pointeur dans Free Fire ?**")
+                    appendLine("• **Suppression de l'Input Lag :** Réduit le temps de latence de détection tactile entre ton doigt et le processeur.")
+                    appendLine("• **Décollage instantané One-Tap :** Permet à l'impulsion vers le haut (flick vertical) d'atteindre la tête de l'adversaire sans résistance.")
+                    appendLine("• **Rotations 360° fluides :** Améliore considérablement le temps de réaction pour poser le mur de glace.")
+                    appendLine()
+                    appendLine("⚙️ **2. Comment l'augmenter pas à pas :**")
+                    appendLine("1. Va dans **Paramètres Android > Gestion globale** (sur Samsung) ou **Paramètres supplémentaires / Système > Langue et saisie** (Xiaomi, Infinix, Tecno, Realme).")
+                    appendLine("2. Ouvre **« Souris et pavé tactile »**.")
+                    appendLine("3. Glisse le curseur **« Vitesse du pointeur » au MAXIMUM (100% à droite vers Rapide)**.")
+                    appendLine("4. Pousse également la **« Vitesse de défilement de la molette »** au maximum.")
+                    appendLine()
+                    appendLine("👑 **3. Les 4 autres réglages essentiels VIP :**")
+                    appendLine("• **Échelles d'animation à 0.5x :** Dans les Options Développeurs, passe les 3 échelles d'animation à 0.5x pour supprimer tout délai graphique.")
+                    appendLine("• **Forcer 90Hz / 120Hz :** Dans *Paramètres > Écran > Fluidité des mouvements : Élevée*.")
+                    appendLine("• **Délai avant appui très court (0.2s - 0.3s) :** Dans *Accessibilité > Interaction et dextérité*.")
+                    appendLine("• **Mémoire tampon du journaliseur :** Passe à **4M ou 16M** dans les Options Développeurs.")
+                }
+            }
+
+            // 1. Sensation de lourdeur / Ralentissement / Drag lourd / Bouton grand vs DPI bas
+            q.contains("lourd") || q.contains("ralentissement") || q.contains("lent") || q.contains("accroche") ||
+            (q.contains("taille") && (q.contains("btn") || q.contains("bouton")) && q.contains("dpi")) ||
+            ((q.contains("one tap") || q.contains("one-tap") || q.contains("onetap") || q.contains("one tape")) && (q.contains("monte pas") || q.contains("bloque") || q.contains("difficile") || q.contains("frein"))) -> {
+                buildString {
+                    appendLine("⚡ **Diagnostic précis : Pourquoi ressens-tu cette lourdeur et ce ralentissement en One-Tap ?**")
+                    appendLine()
+                    appendLine("Tu as mis le doigt exactement sur le conflit mécanique majeur de Free Fire : **l'interaction entre la taille de ton bouton de tir et ton DPI**.")
+                    appendLine()
+                    appendLine("🔴 **1. La taille du bouton de tir (Le coupable mécanique n°1) :**")
+                    appendLine("• **Le piège du gros bouton (55% à 65%) :** Quand le bouton est trop grand, son point d'appui central est positionné trop haut sur l'écran.")
+                    appendLine("• **Conséquence directe :** La distance de swipe vertical restante (la course de drag) est drastiquement réduite. Ton pouce arrive tout en haut de l'écran avant que l'accélération n'ait pu transférer le viseur sur la tête. Le tir semble « lourd », freiné, et reste scotché sur le torse.")
+                    appendLine("• **Réglage recommandé :** Réduis ton bouton de tir à **38% - 44%** et place-le tout en bas à droite sur ton HUD.")
+                    appendLine()
+                    appendLine("⚙️ **2. Le DPI trop bas (La résistance de friction de l'écran) :**")
+                    appendLine("• **Le problème :** Sur le DPI stock (360-392), chaque millimètre de déplacement du pouce envoie peu de pixels à la caméra. Tu as la sensation de « pousser un poids » lors du swipe.")
+                    appendLine("• **Réglage recommandé :**")
+                    appendLine("  - **Avec DPI :** Passe ton DPI entre **480 et 580** dans les options développeurs.")
+                    appendLine("  - **Sans DPI :** Si tu ne modifies pas le DPI, compense immédiatement en montant ton **Point Rouge à 195 - 200 / 200** et ton **Général à 192 / 200**.")
+                    appendLine()
+                    appendLine("🎯 **3. Le geste de tir :**")
+                    appendLine("• Ne fais pas un drag continu et lent. Déclenche une **impulsion sèche et ultra-rapide** du pouce vers le haut (0,05s).")
                 }
             }
 

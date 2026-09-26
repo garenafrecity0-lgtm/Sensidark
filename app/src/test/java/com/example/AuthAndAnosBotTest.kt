@@ -106,10 +106,10 @@ class AuthAndAnosBotTest {
 
         val config = com.example.data.generator.SensitivityEngine.calculate(device, precisionStyle)
 
-        // General is dynamically calculated in responsive pro range (150 to 190) according to button size and DPI
-        assertTrue("General sensitivity for One-Tap should be responsive (between 150 and 190)", config.general in 150..190)
-        assertTrue("Red Dot should be crisp and responsive (between 160 and 195)", config.redDot in 160..195)
-        assertTrue("Fire Button Size should be ergonomic (between 46 and 56%)", config.fireButtonSize in 46..56)
+        // General is dynamically calculated in responsive pro range (170 to 200) according to button size and DPI
+        assertTrue("General sensitivity for One-Tap should be high pro range (between 170 and 200)", config.general in 170..200)
+        assertTrue("Red Dot should be crisp and responsive (between 180 and 200)", config.redDot in 180..200)
+        assertTrue("Fire Button Size should be ergonomic (between 40 and 52%)", config.fireButtonSize in 40..52)
     }
 
     @Test
@@ -154,6 +154,24 @@ class AuthAndAnosBotTest {
         )
         assertNotNull(responseSensi200)
         assertTrue(responseSensi200.contains("200") || responseSensi200.contains("Général"))
+
+        // Test question about heaviness / sluggishness / button size vs low DPI
+        val responseHeaviness = AnosBotService.sendMessage(
+            history = emptyList(),
+            userPrompt = "Je ne sais pas si c'est la taille du btn qui est grand ou a cause du dpi trop bas mais je sent comme une sensation de lourdeur et ralentissement quand j'essaie de faire one tape"
+        )
+        assertNotNull(responseHeaviness)
+        assertTrue(responseHeaviness.contains("lourdeur") || responseHeaviness.contains("ralentissement") || responseHeaviness.contains("bouton"))
+        assertTrue(responseHeaviness.contains("DPI") || responseHeaviness.contains("Point Rouge"))
+
+        // Test question about pointer speed
+        val responsePointerSpeed = AnosBotService.sendMessage(
+            history = emptyList(),
+            userPrompt = "Comment augmenter la vitesse du pointeur et a quoi ca sert ?"
+        )
+        assertNotNull(responsePointerSpeed)
+        assertTrue(responsePointerSpeed.contains("Pointeur") || responsePointerSpeed.contains("Vitesse"))
+        assertTrue(responsePointerSpeed.contains("Paramètres") || responsePointerSpeed.contains("Input Lag") || responsePointerSpeed.contains("One-Tap"))
 
         // Test question about low free look and sniper scope
         val responseLowScopes = AnosBotService.sendMessage(

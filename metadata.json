@@ -1,6 +1,6 @@
 {
-  "name": "Anos Aura",
-  "description": "Anos Aura VIP V2 - Générateur universel de sensibilité Free Fire, DPI dynamique et IA coach Anos Bot.",
+  "name": "Anos Sensi V2",
+  "description": "Anos Sensi V2 - Le générateur ultime de sensibilité Free Fire, calibration One-Tap, guide VIP vitesse du pointeur et IA Anos Bot.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

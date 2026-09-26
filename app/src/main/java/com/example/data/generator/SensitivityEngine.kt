@@ -62,29 +62,30 @@ object SensitivityEngine {
         val noDpiCompensation = if (!isApple && !effectiveUseDpi) +4 else 0
 
         // 5. Base Playstyle Sensitivity Profiles & Ergonomic Button Sizes
+        // Calibrated in the pro competitive 170+, 180+, 190+, 200 range
         val (baseGeneral, baseRedDot, base2x, base4x, baseSniper, baseFreeLook, recommendedButtonSize, buttonPos) = when (playstyle) {
             Playstyle.MAX_SENSI_200 -> {
-                Tuplet8(200, 200, 198, 195, 55, 68, 48, "Bas-Droite (22% du bas, 20% de la droite)")
+                Tuplet8(200, 200, 200, 200, 55, 68, 46, "Bas-Droite (22% du bas, 20% de la droite)")
             }
             Playstyle.PRECISION_HEADSHOT -> {
-                // Precision One-Tap: Elevated responsive General (168) + Sharp Red Dot (176)
-                Tuplet8(168, 176, 154, 142, 44, 58, 52, "Bas-Droite (24% du bas, 22% de la droite)")
+                // Precision One-Tap: High 186 General + Crisp 194 Red Dot for instant headshot
+                Tuplet8(186, 194, 182, 174, 48, 62, 44, "Bas-Droite (23% du bas, 21% de la droite)")
             }
             Playstyle.SPEED_RUSHER -> {
-                // Speed & Rusher: Fast General (184) + Ultra-vivid Red Dot (188)
-                Tuplet8(184, 188, 168, 156, 50, 68, 46, "Bas-Droite (22% du bas, 20% de la droite)")
+                // Speed & Rusher: Ultra-fast 194 General + 198 Red Dot
+                Tuplet8(194, 198, 190, 182, 50, 70, 42, "Bas-Droite (22% du bas, 20% de la droite)")
             }
             Playstyle.BALANCED -> {
-                // Balanced: Pro All-Round setup (158)
-                Tuplet8(158, 164, 146, 134, 42, 56, 50, "Bas-Droite (25% du bas, 23% de la droite)")
+                // Balanced: Pro All-Round setup in 178+
+                Tuplet8(178, 186, 176, 168, 46, 58, 46, "Bas-Droite (24% du bas, 22% de la droite)")
             }
             Playstyle.RECOIL_CONTROL -> {
-                // Anti-Recoil: Stabilized smooth sensitivity (146)
-                Tuplet8(146, 152, 132, 120, 38, 50, 54, "Centre-Bas-Droite (26% du bas, 24% de la droite)")
+                // Anti-Recoil: Stabilized high sensitivity (174+)
+                Tuplet8(174, 182, 172, 164, 44, 55, 48, "Centre-Bas-Droite (25% du bas, 23% de la droite)")
             }
             Playstyle.SNIPER_PRO -> {
-                // Sniper Pro: Controlled General (150) + Surgical Low Sniper Scope (38)
-                Tuplet8(150, 155, 136, 124, 38, 48, 52, "Bas-Droite (25% du bas, 22% de la droite)")
+                // Sniper Pro: 172 General + Surgical Low Sniper Scope (42)
+                Tuplet8(172, 180, 170, 162, 42, 52, 46, "Bas-Droite (24% du bas, 22% de la droite)")
             }
         }
 
@@ -92,16 +93,16 @@ object SensitivityEngine {
         // A larger fire button takes more vertical space on the bottom of the screen,
         // leaving shorter physical drag distance for the thumb to reach the top.
         // Therefore, Sensitivity MUST scale HIGHER to reach the head in fewer millimetres!
-        val buttonSizeBonus = ((recommendedButtonSize - 46) * 1.8f).toInt().coerceIn(-4, 16)
+        val buttonSizeBonus = ((recommendedButtonSize - 44) * 1.5f).toInt().coerceIn(-3, 12)
 
         // 7. INVERSE PROPORTIONALITY LAW (DPI vs SENSIBILITY):
         // If Base Sensitivity is lower -> Target DPI must be HIGHER (+100 to +180) to maintain fast 360° rotations.
         // If Base Sensitivity is higher -> Target DPI is MODERATE (+40 to +75) to prevent overshooting.
         val inverseDpiOffset = when {
-            baseGeneral <= 150 -> 130 + (variationSeed % 25)
-            baseGeneral <= 165 -> 95 + (variationSeed % 20)
-            baseGeneral <= 180 -> 65 + (variationSeed % 20)
-            else -> 45 + (variationSeed % 15)
+            baseGeneral <= 175 -> 110 + (variationSeed % 25)
+            baseGeneral <= 185 -> 80 + (variationSeed % 20)
+            baseGeneral <= 195 -> 55 + (variationSeed % 20)
+            else -> 40 + (variationSeed % 15)
         }
 
         val calculatedDpi = if (effectiveUseDpi) {
@@ -113,11 +114,11 @@ object SensitivityEngine {
 
         // 8. DPI COMPENSATION ON SENSIBILITY:
         // When DPI is low (stock or < 420) or playing WITHOUT DPI modification,
-        // Sensitivity (General & Red Dot) is boosted significantly (+14 to +26) to guarantee effortless One-Taps!
+        // Sensitivity (General & Red Dot) is boosted (+6 to +12) to guarantee effortless One-Taps!
         val dpiCompensationOnSensi = if (!effectiveUseDpi || calculatedDpi <= 420) {
-            +18
-        } else if (calculatedDpi >= 550) {
-            -4
+            +8
+        } else if (calculatedDpi >= 560) {
+            -2
         } else {
             0
         }
@@ -133,29 +134,29 @@ object SensitivityEngine {
         val finalGeneral = if (playstyle == Playstyle.MAX_SENSI_200) {
             200
         } else {
-            (baseGeneral + hardwareModifier + buttonSizeBonus + dpiCompensationOnSensi + generalVariation).coerceIn(120, 200)
+            (baseGeneral + hardwareModifier + buttonSizeBonus + dpiCompensationOnSensi + generalVariation).coerceIn(160, 200)
         }
 
         val finalRedDot = if (playstyle == Playstyle.MAX_SENSI_200) {
             200
         } else {
-            (baseRedDot + (hardwareModifier / 2) + buttonSizeBonus + (dpiCompensationOnSensi / 2) + redDotVariation).coerceIn(125, 200)
+            (baseRedDot + (hardwareModifier / 2) + buttonSizeBonus + (dpiCompensationOnSensi / 2) + redDotVariation).coerceIn(170, 200)
         }
 
         val final2x = if (playstyle == Playstyle.MAX_SENSI_200) {
             200
         } else {
-            (base2x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(90, 195)
+            (base2x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(150, 200)
         }
 
         val final4x = if (playstyle == Playstyle.MAX_SENSI_200) {
             200
         } else {
-            (base4x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(80, 185)
+            (base4x + (hardwareModifier / 2) + (buttonSizeBonus / 2) + scopeVariation).coerceIn(140, 200)
         }
         val finalSniper = (baseSniper + (refreshFactor / 2) + (scopeVariation / 2)).coerceIn(30, 65)
         val finalFreeLook = (baseFreeLook + (hardwareModifier / 2) + generalVariation).coerceIn(40, 80)
-        val finalButtonSize = (recommendedButtonSize + buttonVariation).coerceIn(44, 58)
+        val finalButtonSize = (recommendedButtonSize + buttonVariation).coerceIn(40, 56)
 
         val dragTechnique = when (playstyle) {
             Playstyle.MAX_SENSI_200 -> "Swipe court et sec : la sensi 200 compense l'inertie pour un demi-tour et one-tap éclair."
